@@ -99,7 +99,19 @@ class Bundle {
 			self::$url_vars = $vars;
 			
 			// Parse the lhtml file and load the stack
-			$out = e::$lhtml->file($file)->parse()->build();
+			$skipCache = isset($_GET['--no-cache']);
+			$start = microtime(true);
+			$out = e::$lhtml->file($file)->parse($skipCache)->build();
+			$end = microtime(true);
+			$time = ($end - $start) * 1000;
+
+			// Show debug time if set
+			if(isset($_GET['--lhtml-time'])) {
+				
+
+				// $file $time
+				eval(d);
+			}
 
 			/**
 			 * HACK
@@ -110,7 +122,7 @@ class Bundle {
 			$out = str_replace(array("-#-"), array('&quot;'), $out);
 			echo $out;
 
-			// Complete the current binding queue
+			// Complete the page load
 			e\Complete();
 		}
 	}
@@ -151,12 +163,39 @@ class Instance {
 		return $this;
 	}
 	
-	public function parse() {
+	public function parse($skipCache = false) {
 		if(!isset($this->file) && !isset($this->string))
 			throw new Exception("LHTML: No file or string specified to parse");
 		
 		if(isset($this->file)) {
-			$this->stack = Parser::parseFile($this->file);
+
+			/**
+			 * Check cache for existing stack
+			 * @author Nate Ferrero
+			 */
+			$ctime = e::$cache->timestamp('lhtml', $this->file);
+			if($skipCache || $ctime === false || filemtime($this->file) > $ctime) {
+
+				/**
+				 * Actually parse the file
+				 * @author Nate Ferrero
+				 */
+				$this->stack = Parser::parseFile($this->file);
+
+				/**
+				 * If using cache, store
+				 * @author Nate Ferrero
+				 */
+				if(!$skipCache)
+					e::$cache->store('lhtml', $this->file, $this->stack);
+			} else {
+
+				/**
+				 * Get the stack from the cache
+				 */
+				$this->stack = e::$cache->get('lhtml', $this->file);
+			}
+
 			unset($this->file);
 		}
 		else if(isset($this->string)) {
