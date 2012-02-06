@@ -517,12 +517,15 @@ class Node {
 			}
 			if(substr($attr,0,1) == ':') continue;
 			
-			$response = e::$events->{"attribute_$attr"}($value);
-			
-			if(count($response) > 0)
-				$value = array_pop($response);
+			/**
+			 * Disable this for now - need to consider speed etc.
+			 * @author Nate Ferrero
+			 * $response = e::$events->{"attribute_$attr"}($value);
+			 *
+			 * if(count($response) > 0)
+			 * 	$value = array_pop($response);
+			 */
 
-			//if($attr == 'href') eval(d);
 			if(strlen($value) > 0) $html .= " $attr=\"$value\"";
 		}
 		return $html;
