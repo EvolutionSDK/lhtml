@@ -15,25 +15,16 @@ class Scope {
 	private $deferred_sources = array();
 	
 	public $timers = array();
-	
-	public static $hooks = array();
-	
-	public static function addHook($name, $obj) {
-		if(substr($name, 0, 1) !== ':') throw new Exception('You must prefix your LHTML hook with a colon! Error in hook $name');
-		self::$hooks[$name] =& $obj;
+
+	public static function hookExists($name) {
+		$hooks = e::configure('lhtml')->hook;
+		return isset($hooks[$name]);
 	}
-	
+
 	public static function getHook($name) {
-		if(isset(self::$hooks[$name])) return self::$hooks[$name];
-		else return false;
-	}
-	
-	public static function rmvHook($name) {
-		if(isset(self::$hooks[$name])) {
-			unset(self::$hooks[$name]);
-			return true;
-		}
-		else return false;
+		$hooks = e::configure('lhtml')->hook;
+		if(isset($hooks[$name])) return $hooks[$name];
+		return false;
 	}
 
 	public function sourceData() {
@@ -59,13 +50,7 @@ class Scope {
 		$this->owner = $owner;
 		
 		/**
-		 * Set $_GET and $_POST to hooks
-		 */
-		self::$hooks[':get'] =& $_GET;
-		self::$hooks[':post'] =& $_POST;
-		
-		/**
-		 * Prepare/Bind URL Hooks
+		 * Prepare URL Hook
 		 */
 		$url = explode('/', $_SERVER['REQUEST_URI']);
 		$url = array_filter($url, function($val) {
@@ -76,7 +61,11 @@ class Scope {
 		$url['first'] = reset($url);
 		$url['current'] = $_SERVER['REQUEST_URI'];
 		$url['referer'] = $_SERVER['HTTP_REFERER'];
-		self::$hooks[':url'] =& $url;
+
+		/**
+		 * Bind URL hook
+		 */
+		e::configure('lhtml')->activeAddKey('hook', ':url', &$url);
 	}
 	
 	public function get($var_map) {
@@ -113,14 +102,32 @@ class Scope {
 		}
 		
 		$flag_first = false;
-		if(strpos($map[0],':')===0 && isset(self::$hooks[$map[0]])) {
-			if(is_callable(self::$hooks[$map[0]])) {
-				$v = self::$hooks[$map[0]];
-				$source = $v();
+
+		if(is_array($map[0]) && isset($map[0]['func']) && strpos($map[0]['func'],':')===0 && self::hookExists($map[0]['func'])) {
+
+			$hook = self::getHook($map[0]['func']);
+
+			if(is_callable($hook)) {
+				$source = call_user_func_array($hook, $map[0]['args']);
 				$flag_first=1;
 			}
 			else {
-				$source = self::$hooks[$map[0]];
+				$func = $map[0]['func'];
+				throw new Exception("LHTML hook `$func` is not callable");
+			}
+
+		}
+
+		else if(is_string($map[0]) && strpos($map[0],':')===0 && self::hookExists($map[0])) {
+
+			$hook = self::getHook($map[0]);
+
+			if(is_callable($hook)) {
+				$source = $hook();
+				$flag_first=1;
+			}
+			else {
+				$source = $hook;
 				$flag_first=1;
 			}
 			
@@ -467,7 +474,7 @@ class Scope {
 		if(strpos($content, '(') === false) return array();
 		// parse out the variables
 		preg_match_all(
-			"/([\w]+?)\(([\w:|.\,=@\(\)\/\-\%& ]*?)\)/", //regex
+			"/([\w\:]+?)\(([\w:|.\,=@\(\)\/\-\%& ]*?)\)/", //regex
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings

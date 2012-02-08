@@ -14,10 +14,19 @@ class Bundle {
 	}
 	
 	public function __initBundle() {
-		Scope::addHook(':e', new e_handle);
-		Scope::addHook(':slug', function() { return e::$lhtml->_get_special_vars(':slug'); });
-		Scope::addHook(':id', function() { return e::$lhtml->_get_special_vars(':id'); });
-		Scope::addHook(':urlVars', function() { return e::$lhtml->_get_special_vars(':urlVars'); } );
+		/**
+		 * Add basic hooks
+		 */
+		e::configure('lhtml')->activeAddKey('hook', ':e', new e_handle);
+		e::configure('lhtml')->activeAddKey('hook', ':slug', function() { return e::$lhtml->_get_special_vars(':slug'); });
+		e::configure('lhtml')->activeAddKey('hook', ':id', function() { return e::$lhtml->_get_special_vars(':id'); });
+		e::configure('lhtml')->activeAddKey('hook', ':urlVars', function() { return e::$lhtml->_get_special_vars(':urlVars'); } );
+		
+		/**
+		 * Set $_GET and $_POST to hooks
+		 */
+		e::configure('lhtml')->activeAddKey('hook', ':get', &$_GET);
+		e::configure('lhtml')->activeAddKey('hook', ':post', &$_POST);
 	}
 	
 	public function _on_lhtml_add_hook($hook, $item) {
