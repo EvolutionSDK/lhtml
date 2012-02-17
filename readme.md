@@ -93,3 +93,108 @@ Just like sourcing variables (above) LHTML also supports loop sourcing which cou
 	</div>
 
 Now with the above function if `{var.somthing.apples.oranges.members}` is a multidimensional array then it would look through it and print out the div for every member in the array.
+
+### LHTML If Tag
+
+The If tag in LHTML allows data to be shows or hidden based on the if condition specified. The most basic form of the If tag is `var == var1` an example of this would be
+
+	<:if cond="{var1} == 'apples'">
+		<p>If var1 was equal to 'apples' this would show</p>
+	</:if>
+
+The cond attribute accepts any php conditional operator; such as.
+
+	<				# Less Than
+	>				# Greater Than
+	==				# Equal To
+	!=				# Not Equal To
+	<=				# Less Than or Equal To
+	>=				# Greater Than or Equal To
+	===				# Strict Equal To
+	!==				# Strict Not Equal To
+	instanceof		# Insrance of Object (This works because cond parses the variables)
+
+There are other attributes that can be run on `<:if>`.
+	
+#### <:if count="{var}">
+
+The if count var count the number of keys in an array, or the amount of times an object can be traversed.
+
+Greater Than:
+	
+	<:if count="{var}" gt="2">
+	</:if>
+
+Less Than:
+	
+	<:if count="{var}" lt="2">
+	</:if>
+
+#### <:if var="{var}" equals="apples">
+
+The if var equals function just checks to see if {var} equals 'apples'. This could also be done with the standard `cond` attribute by running `cond="{var} == 'apples'"`.
+
+	<:if var="{var}" equals="apples">
+	</if>
+
+#### <:if var="{var}" not="apples">
+
+The if var not function just checks to see if {var} does not equal 'apples'. This could also be done with the standard `cond` attribute by running `cond="{var} != 'apples'"`.
+
+	<:if var="{var}" not="apples">
+	</if>
+
+#### <:if num="{var}">
+
+The if num function checkts to see if a number is greater or less than the provided number.
+
+Greater Than:
+	
+	<:if num="{var}" gt="2">
+	</:if>
+
+Less Than:
+	
+	<:if num="{var}" lt="2">
+	</:if>
+
+#### <:if empty="{var}">
+
+Checks to see if a variable is empty
+
+	<:if empty="{var}">
+	</:if>
+
+#### <:if not_empty="{var}">
+
+Checks to see if a variable is not empty
+
+	<:if not_empty="{var}">
+	</:if>
+
+#### <:if browser="">
+
+Checks to see if a particular browser if something. Currently only supports Internet Explorer detection.
+
+	<:if browser="IE">
+	</:if>
+
+#### <:if time="2012-02-10 02:20:00">
+
+Checks to see if the time provided matches the actual time. The format it checks against is customizable using the php `date()` variables. The default is `Y-m-d H:i:s` You can also specify an offset for timezones (since E3 prefers GMT time) such as `offset="-5"` which would be Eastern Standard Time.
+
+Is October:
+
+	<:if time="10" df="m">
+	</:if>
+
+#### Else Tag
+
+Along with the If condition you can also specify an else condition.
+
+	<:if cond="1 == 2">
+		Contents wont show
+		<:else>
+			Contents Will Show
+		</:else>
+	</:if>
