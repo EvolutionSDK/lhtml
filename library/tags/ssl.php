@@ -39,6 +39,7 @@
 
 namespace Bundles\LHTML;
 use Exception;
+use e;
 
 class Node_SSL extends Node {
 	
