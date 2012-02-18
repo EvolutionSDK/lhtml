@@ -72,7 +72,6 @@ class Node {
 	public function prebuild() {}
 	
 	public function _error($err = 'Error') {
-		throw $err;
 		if($err instanceof NotFoundException)
 			throw $err;
 		if($err instanceof Exception)
