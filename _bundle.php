@@ -29,10 +29,6 @@ class Bundle {
 		e::configure('lhtml')->activeAddKey('hook', ':post', &$_POST);
 	}
 	
-	public function _on_lhtml_add_hook($hook, $item) {
-		
-	}
-	
 	public function _on_portal_route($path, $dir) {
 		$this->route($path, array($dir));
 	}
