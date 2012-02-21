@@ -206,10 +206,10 @@ class Node_if extends Node {
 
 			$vars = $this->extract_vars($v);
 			if($vars) foreach($vars as $var) {
-				$val = $this->_data()->$var;
+				$v = $this->_data()->$var;
 			}
-
-			if(!isset($val) || empty($val) || $val === false) $retval = true;
+			
+			if(!isset($v) || empty($v)) $retval = true;
 			else $retval = false;
 			
 		}
