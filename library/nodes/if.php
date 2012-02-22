@@ -10,7 +10,7 @@ class _If extends Node {
 		$this->element = false;
 	}
 	
-	public function build() {		
+	public function build() {
 		$this->_init_scope();
 		$output = "";
 		
@@ -33,13 +33,13 @@ class _If extends Node {
 		 * Render the code
 		 */
 		if($this->process()) {
-			if(!empty($this->children)) foreach($this->children as $child) {			
+			if(!empty($this->children)) foreach($this->children as $child) {
 				if(is_object($child)) $output .= $child->build();
 				else if(is_string($child)) $output .= $this->_string_parse($child);
 			}
 		}
 		else {
-			if(!empty($this->children)) foreach($this->children as $child) {	
+			if(!empty($this->children)) foreach($this->children as $child) {
 				if(is_object($child)) {
 					if($child->fake_element == ':else') $output .= $child->build();
 				}
