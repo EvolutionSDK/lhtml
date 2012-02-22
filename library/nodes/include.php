@@ -1,9 +1,10 @@
 <?php
 
-namespace Bundles\LHTML;
+namespace Bundles\LHTML\Nodes;
+use Bundles\LHTML\Node;
 use Exception;
 
-class Node_include extends Node {
+class Include extends Node {
 	
 	public function init() {
 		$this->element = false;
@@ -22,7 +23,7 @@ class Node_include extends Node {
 		$vars = $this->extract_vars($v);
 		if($vars) foreach($vars as $var) {
 			$data_response = $data->$var;	
-			$v = str_replace('{'.$var.'}', $data_response, $v);				
+			$v = str_replace('{'.$var.'}', $data_response, $v);
 		}
 		
 		$v = "$dir/$v";

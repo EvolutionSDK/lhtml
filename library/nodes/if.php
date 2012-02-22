@@ -1,9 +1,10 @@
 <?php
 
-namespace Bundles\LHTML;
+namespace Bundles\LHTML\Nodes;
+use Bundles\LHTML\Node;
 use Exception;
 
-class Node_if extends Node {
+class _If extends Node {
 	
 	public function init() {
 		$this->element = false;
@@ -265,7 +266,7 @@ class Node_if extends Node {
 }
 
 
-class Node_else extends Node {
+class _Else extends Node {
 	public $show_else = 0;
 	public function __construct($element = false, $parent = false) {
 		parent::__construct($element, $parent);

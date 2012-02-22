@@ -1,6 +1,7 @@
 <?php
 
-namespace Bundles\LHTML;
+namespace Bundles\LHTML\Nodes;
+use Bundles\LHTML\Node;
 use Exception;
 use stack;
 use e;
@@ -11,7 +12,7 @@ use e;
  * @package default
  * @author Kelly Lauren Summer Becker
  */
-class Node_Template extends Node {
+class Template extends Node {
 	
 	public function init() {
 		$this->element = false;

@@ -1,10 +1,11 @@
 <?php
 
-namespace Bundles\LHTML;
+namespace Bundles\LHTML\Nodes;
+use Bundles\LHTML\Node;
 use Exception;
 use e;
 
-class Node_Select extends Node {
+class Select extends Node {
 	
 	public function init() {
 		$this->element = 'select';

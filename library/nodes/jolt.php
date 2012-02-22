@@ -1,13 +1,16 @@
 <?php
 
-namespace Bundles\LHTML;
+namespace Bundles\LHTML\Nodes;
+use Bundles\LHTML\Node;
+use Bundles\LHTML\Parser;
+use Bundles\LHTML\Scope;
 use Exception;
 
 /**
  * Jolt quick templating system
  * @author Nate Ferrero
  */
-class Node_Jolt extends Node {
+class Jolt extends Node {
 	
 	public function prebuild() {
 		$this->element = false;

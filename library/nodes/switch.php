@@ -1,9 +1,10 @@
 <?php
 
-namespace Bundles\LHTML;
+namespace Bundles\LHTML\Nodes;
+use Bundles\LHTML\Node;
 use Exception;
 
-class Node_Switch extends Node {
+class _Switch extends Node {
 	
 	public function init() {
 		$this->element = false;

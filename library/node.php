@@ -5,12 +5,6 @@ use Bundles\Router\NotFoundException;
 use Exception;
 use e;
 
-/**
- * Load LHTML Tags
- */
-foreach(glob(__DIR__.'/tags/*.php') as $file)
-	require_once($file);
-
 class Node {
 	
 	/**
@@ -95,10 +89,12 @@ class Node {
 		 * @todo allow namespaced tags
 		 */
 		if(strpos($name, ':') === 0)
-			$class_name = __NAMESPACE__."\\Node_".substr($name, 1);
+			$class_name = __NAMESPACE__."\\Nodes\\".substr($name, 1);
 		else
-			$class_name = __NAMESPACE__."\\Node_$name";
+			$class_name = __NAMESPACE__."\\Nodes\\$name";
 		
+		e\VerifyClass($class_name);
+
 		if(strpos($name, ':') === 0) {
 			try { $nchild = new $class_name($name, $this); }
 			catch(NotFoundException $e) {

@@ -37,10 +37,11 @@
  * 
  **/
 
-namespace Bundles\LHTML;
+namespace Bundles\LHTML\Nodes;
+use Bundles\LHTML\Node;
 use Exception;
 
-class Node_SSL extends Node {
+class SSL extends Node {
 	
 	public function init() {
 		$this->element = false;
