@@ -1,10 +1,11 @@
 <?php
 
 namespace Bundles\LHTML\Nodes;
+use Bundles\LHTML\Parser;
 use Bundles\LHTML\Node;
 use Exception;
 
-class Include extends Node {
+class _Include extends Node {
 	
 	public function init() {
 		$this->element = false;
