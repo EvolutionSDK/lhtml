@@ -302,7 +302,7 @@ class Node {
 
 		$this->prebuild();
 
-		if(isset($_GET['--stack']) && $_GET['--stack'] == $this->fake_element)
+		if(isset($_GET['--lhtml-stack']) && $_GET['--lhtml-stack'] == $this->fake_element)
 			dump($this);
 
 		$output = "";

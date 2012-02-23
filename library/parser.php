@@ -169,7 +169,7 @@ class Parser {
 	public static function parseLexer(&$lexer) {
 		
 		// Debug if set
-		if(isset($_GET['--tokens'])) {
+		if(isset($_GET['--lhtml-tokens'])) {
 			echo $lexer->debugHTML();
 			e\complete();
 		}

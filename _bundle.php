@@ -108,7 +108,7 @@ class Bundle {
 			self::$url_vars = $vars;
 			
 			// Parse the lhtml file and load the stack
-			$skipCache = isset($_GET['--no-cache']);
+			$skipCache = isset($_GET['--lhtml-no-cache']) || isset($_GET['--lhtml-tokens']);
 			$start = microtime(true);
 			$out = e::$lhtml->file($file)->parse($skipCache)->build();
 			$end = microtime(true);
