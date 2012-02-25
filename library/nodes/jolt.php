@@ -47,7 +47,8 @@ class Jolt extends Node {
 
 		// Add attributes as variables in new stack
 		foreach ($this->attributes as $key => $value)
-			$data->$key = $this->_string_parse($value);
+			$data->$key = $this->_string_parse($value, true); /* Second argument means objects will be returned as-is;
+				Because these variables are not final output to the page, we don't need them to strictly be strings */
 		
 		// Assemble template content areas
 		foreach ($this->children as $child) {

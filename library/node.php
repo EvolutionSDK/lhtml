@@ -446,13 +446,23 @@ class Node {
 	 * @return void
 	 * @author Kelly Lauren Summer Becker
 	 */
-	public function _string_parse($value) {
+	public function _string_parse($value, $returnObjects = false) {
 		$vars = $this->extract_vars($value);
-		
+
+		/**
+		 * Only allow returning objects when the entire string is used for the object alone
+		 * @author Nate Ferrero
+		 */
+		if($returnObjects && count($vars) === 1 && $value === "{".$vars[0]."}");
+		else $returnObjects = false;
+
 		if($vars) foreach($vars as $var) {
 			$data_response = ($this->_data()->$var);
-			if(is_object($data_response))
+			if(is_object($data_response)) {
+				if($returnObjects)
+					return $data_response;
 				$data_response = $this->describe($data_response);
+			}
 				
 			$value = str_replace('{'.$var.'}', $data_response, $value);
 		}
