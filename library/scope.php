@@ -220,7 +220,10 @@ class Scope {
 					$iterated = true;
 					$source = $source[$map[1]];
 				}
-				else $source = @$source[$var];
+				else if(isset($source[$var]))
+					$source = $source[$var];
+				else
+					$source = false;
 			}
 			else $source = false;
 		}
