@@ -12,6 +12,10 @@ class Bundle {
 	public function __getBundle() {
 		return new Instance;
 	}
+
+	public function __callBundle() {
+		return new Instance;
+	}
 	
 	public function __initBundle() {
 		/**
