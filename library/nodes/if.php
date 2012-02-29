@@ -77,7 +77,7 @@ class _If extends Node {
 				if(is_object($data_response))
 					$data_response = $this->describe($data_response);
 								
-				$v = str_replace('{'.$var.'}', $data_response, $v);				
+				$v = str_replace('{'.$var.'}', $data_response, $v);
 			}
 
 			$v = str_replace('\'', '', $v);
@@ -166,6 +166,36 @@ class _If extends Node {
 			}
 			
 			$retval = $v != $this->attributes['not'];
+			
+		}
+		
+		if(isset($this->attributes['true'])) {
+		
+			$v = $this->attributes['true'];
+			
+			if(strpos($v, '{') === false) $v = '{'.$v.'}';
+
+			$vars = $this->extract_vars($v);
+			if($vars) foreach($vars as $var) {
+				$v = $this->_data()->$var;
+			}
+			
+			$retval = $v ? true : false;
+			
+		}
+		
+		if(isset($this->attributes['false'])) {
+		
+			$v = $this->attributes['false'];
+			
+			if(strpos($v, '{') === false) $v = '{'.$v.'}';
+
+			$vars = $this->extract_vars($v);
+			if($vars) foreach($vars as $var) {
+				$v = $this->_data()->$var;
+			}
+			
+			$retval = $v ? false : true;
 			
 		}
 		
