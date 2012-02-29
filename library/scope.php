@@ -195,7 +195,7 @@ class Scope {
 		foreach($map as $i=>$var) {
 			if($map[0] == ':get' && $map[1] == 'test') echo(' | i:'.$i.' | flag: '.$flag_first);
 			if($flag_first && $i < $flag_first) continue;
-			if(!isset($source) || !$source) break;
+			if(!isset($source) || (!$source && !is_array($source))) break;
 			
 			if(is_array($var) && is_object($source)) {
 				if(method_exists($source, $var['func'])) $source = call_user_func_array(array($source, $var['func']), $var['args']);
@@ -222,8 +222,9 @@ class Scope {
 				}
 				else if(isset($source[$var]))
 					$source = $source[$var];
-				else
+				else {
 					$source = false;
+				}
 			}
 			else $source = false;
 		}
