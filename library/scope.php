@@ -134,13 +134,35 @@ class Scope {
 		}
 		
 		if(!$flag_first) {
+
+			/**
+			 * Check if traversable
+			 */
+			$traversable = isset($this->source_data[$map[0]]) && $this->source_data[$map[0]] instanceof \Traversable;
+
+			/**
+			 * Return literal string
+			 */
 			if(is_string($map[0]) && strpos($map[0],"'") === 0) return trim($map[0],"'");
+
+			/**
+			 * Return literal number
+			 */
 			else if(is_string($map[0]) && is_numeric($map[0])) return $map[0];
 			
 			/**
-			 * Return Traverable Object
-			 */	
-			else if($this->source_pointer !== false && is_string($map[0]) && isset($this->source_data[$map[0]]) && $this->source_data[$map[0]] instanceof \Traversable) {
+			 * Pass on traversable object (i.e. allow loopable source when not in a loop)
+			 * @author Nate Ferrero
+			 */
+			else if($this->source_pointer === false && is_string($map[0]) && $traversable) {
+				$source = $this->source_data[$map[0]];
+				$flag_first = 1;
+			}
+
+			/**
+			 * Return Traversable Object
+			 */
+			else if($this->source_pointer !== false && is_string($map[0]) && $traversable) {
 				$i=0; foreach($this->source_data[$map[0]] as $source) {
 					if($i === $this->source_pointer) break;
 					unset($source);

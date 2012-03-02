@@ -105,8 +105,7 @@ class Jolt extends Node {
 			$template .= '.jolt';
 		
 		// Get content areas and remove them from the jolt tag
-		$contents = $this->children;
-		$this->children = array();
+		$contents = $this->detachAllChildren();
 
 		// Load the jolt file
 		$stack = Parser::parseFile($template);
@@ -132,25 +131,20 @@ class Jolt extends Node {
 		
 		// Assemble template content areas
 		foreach ($contents as $child) {
-			if(!($child instanceof Node) && trim($child) !== '')
-				throw new Exception("Cannot place raw content directly inside a `<:jolt>` tag in `$jdata->__file__`");
+			if(!($child instanceof Node)) {
+				if(trim($child) !== '')
+					throw new Exception("Cannot place raw content directly inside a `<:jolt>` tag in `$jdata->__file__`");
+				continue;
+			}
 
 			// Check for content tags
 			$tags = $stack->getElementsByTagName($child->fake_element);
 
 			// Move contents to new tags
 			foreach ($tags as $tag) {
-				$tag->element = false;
-				foreach ($child->children as $subChild) {
 
-					// Clone the node and set the correct new parent
-					if ($subChild instanceof Node) {
-						$newChild = clone $subChild;
-						$newChild->appendTo($tag);
-					} else {
-						$tag->children[] = $subChild;
-					}
-				}
+				$tag->element = false;
+				$child->appendTo($tag);
 
 				// Only move to the first tag
 				break;

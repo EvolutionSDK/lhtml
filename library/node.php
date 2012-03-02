@@ -391,7 +391,11 @@ class Node {
 		 * Grab the next instance of Scope in line
 		 */
 		if(isset($this->_data)) return $this->_data;
-		else return $this->_->_data();
+		else {
+			if(!($this->_ instanceof Node))
+				throw new Exception("Parent of `&lt;$this->fake_element&gt;` is not a Node");
+			return $this->_->_data();
+		}
 	}
 	
 	public function _init_scope($new = false){
@@ -619,7 +623,7 @@ class Node {
 		$class = get_class($object);
 	    $xtra = '';
 	    $xtra .= $object->name;
-	    if(strlen($xtra) < 1)
+	    if(strlen($xtra) < 1 && method_exists($object, 'name'))
 	        $xtra .= $object->name();
 	    if(strlen($xtra) > 0)
 	        $xtra = ': ' . $xtra;
