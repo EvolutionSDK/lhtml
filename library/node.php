@@ -36,7 +36,7 @@ class Node {
 	 */
 	public static $complete_tags = array('br','hr','link','img');
 	
-	public function __construct($element, $parent = false) {		
+	public function __construct($element, $parent = false) {
 		/**
 		 * Initialize the element and set the parent if one exists
 		 */
@@ -143,8 +143,11 @@ class Node {
 	 * @author Nate Ferrero
 	 */
 	public function remove() {
+		if(is_null($this->_))
+			return;
 		$index = array_search($this, $this->_->children);
-		array_splice($this->_->children, $index, 1);
+		if($index !== false)
+			array_splice($this->_->children, $index, 1);
 	}
 
 	/**

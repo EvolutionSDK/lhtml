@@ -222,9 +222,29 @@ class Instance {
 	public function build() {
 		if(!isset($this->stack))
 			$this->parse();
-		return $this->stack->build();
+
+		/**
+		 * This creates a loop that either returns or builds the new stack, as needed
+		 * @author Nate Ferrero
+		 */
+		while(true) {
+			try {
+				return $this->stack->build();
+			}
+			catch(RebuildWithNewStack $rebuild) {
+				$this->stack = $rebuild->stack;
+			}
+		}
 	}
 
+}
+
+/**
+ * Rebuild with new stack exception
+ * @author Nate Ferrero
+ */
+class RebuildWithNewStack extends Exception {
+	public $stack;
 }
 
 class e_handle {

@@ -4,33 +4,115 @@ namespace Bundles\LHTML\Nodes;
 use Bundles\LHTML\Node;
 use Bundles\LHTML\Parser;
 use Bundles\LHTML\Scope;
+use Bundles\LHTML\RebuildWithNewStack;
 use Exception;
+use e;
 
 /**
  * Jolt quick templating system
  * @author Nate Ferrero
  */
 class Jolt extends Node {
+
+	/**
+	 * Handle Jolt sections
+	 * @author Nate Ferrero
+	 */
+	public static $sections = array();
+	public static $parents = array();
+
+	/**
+	 * Save a section stack for later use
+	 */
+	public static function setSection($section, $file, $stack) {
+		/**
+		 * Initialize array
+		 */
+		if(!isset(self::$sections[$section]))
+			self::$sections[$section] = array();
+
+		/**
+		 * Check if the section is already being included, i.e. won't be used again later
+		 */
+		if(isset(self::$sections[$section][$file])
+			&& self::$sections[$section][$file] == '@default')
+			return false;
+
+		/**
+		 * Save the section stack
+		 */
+		self::$sections[$section][$file] = $stack;
+		return true;
+	}
+
+	/**
+	 * Load a section stack
+	 */
+	public static function getSection($section, $default) {
+		if(isset(self::$sections[$section])) {
+			/**
+			 * If a non-default area has been defined, return it first
+			 */
+			foreach(array_reverse(array_keys(self::$sections[$section])) as $file)
+				return self::$sections[$section][$file];
+		} else {
+			self::$sections[$section] = array();
+		}
+
+		/**
+		 * There was no section to get, load the default
+		 */
+		self::$sections[$section][$default] = '@default';
+		return Parser::parseFile($default);
+	}
 	
+	/**
+	 * Process the jolt tag
+	 * @author Nate Ferrero
+	 */
 	public function prebuild() {
 		$this->element = false;
 		$jdata = $this->_data();
 
 		/**
-		 * Load template
+		 * Get current directory
 		 * @author Nate Ferrero
 		 */
 		$dir = realpath(dirname($jdata->__file__));
+
+		/**
+		 * Check if this is jolt section logic
+		 */
+		if(isset($this->attributes['section'])) {
+			return $this->doSection();
+		}
+
+		/**
+		 * Jolt templating
+		 * @author Nate Ferrero
+		 */
+		if(!isset($this->attributes['template']))
+			throw new Exception('Jolt template is not specified');
+
+		/**
+		 * Load template
+		 * @author Nate Ferrero
+		 */
 		$template = $this->attributes['template'];
 		$template = "$dir/$template";
 		
-		if (pathinfo($template, PATHINFO_EXTENSION) !== 'jolt')
+		if(pathinfo($template, PATHINFO_EXTENSION) !== 'jolt')
 			$template .= '.jolt';
 		
+		// Get content areas and remove them from the jolt tag
+		$contents = $this->children;
+		$this->children = array();
+
 		// Load the jolt file
 		$stack = Parser::parseFile($template);
 
 		// Process each jolt template and remove them from the output
+		$templates = array();
 		$jolts = $stack->getElementsByTagName('jolt:templates');
 		foreach ($jolts as $jolt) {
 			foreach ($jolt->children as $template) {
@@ -39,20 +121,19 @@ class Jolt extends Node {
 			$jolt->remove();
 		}
 
-		// Get new scope object
-		$data = $stack->_data();
-
 		// Add the new stack to the jolt template tag
 		$stack->appendTo($this);
 
 		// Add attributes as variables in new stack
 		foreach ($this->attributes as $key => $value)
-			$data->$key = $this->_string_parse($value, true); /* Second argument means objects will be returned as-is;
+			if($key !== ':load')
+				$jdata->$key = $this->_string_parse($value, true); /* Second argument means objects will be returned as-is;
 				Because these variables are not final output to the page, we don't need them to strictly be strings */
 		
 		// Assemble template content areas
-		foreach ($this->children as $child) {
-			if (!($child instanceof Node)) continue;
+		foreach ($contents as $child) {
+			if(!($child instanceof Node) && trim($child) !== '')
+				throw new Exception("Cannot place raw content directly inside a `<:jolt>` tag in `$jdata->__file__`");
 
 			// Check for content tags
 			$tags = $stack->getElementsByTagName($child->fake_element);
@@ -67,15 +148,20 @@ class Jolt extends Node {
 						$newChild = clone $subChild;
 						$newChild->appendTo($tag);
 					} else {
-						$newChild = $subChild;
-						$tag->children[] = $newChild;
+						$tag->children[] = $subChild;
 					}
 				}
 
-				// Remove the used content
-				$child->remove();
+				// Only move to the first tag
+				break;
 			}
 		}
+
+		/**
+		 * If there's no templates, return now
+		 */
+		if(count($templates) == 0)
+			return;
 
 		// Apply all templates to remaining elements
 		foreach ($templates as $template) {
@@ -137,4 +223,78 @@ class Jolt extends Node {
 		}
 	}
 	
+	/**
+	 * Jolt section logic
+	 * @author Nate Ferrero
+	 */
+	private function doSection() {
+
+		$section = $this->attributes['section'];
+
+		/**
+		 * Check if this is an outclude or include
+		 */
+		if(isset($this->attributes['parent'])) {
+
+			$parent = $this->attributes['parent'];
+
+			$node = new Node('');
+			$node->children = $this->children;
+			$outclude = self::setSection($section, $jdata->__file__, $node);
+
+			/**
+			 * If we are being included instead of outcluding the parent, just return here
+			 * @author Nate Ferrero
+			 */
+			if(!$outclude)
+				return;
+			
+			e\trace("Jolt", "Loading parent `$parent`");
+
+			/**
+			 * Include the parent content area if not included
+			 */
+			$v = "$dir/$parent";
+			if(pathinfo($v, PATHINFO_EXTENSION) !== 'lhtml')
+				$v .= '.lhtml';
+
+			if($jdata->__file__ == $v)
+				throw new Exception("Cannot use a jolt section as it's own parent");
+
+			if(!isset(self::$parents[$v])) {
+				self::$parents[$v] = Parser::parseFile($v);
+			}
+
+			/**
+			 * Rebuild the stack from the parent
+			 */
+			$rebuild = new RebuildWithNewStack;
+			$rebuild->stack = self::$parents[$v];
+			throw $rebuild;
+		}
+
+		/**
+		 * Content section definitions
+		 */
+		if(isset($this->attributes['content'])) {
+
+			$content = $this->attributes['content'];
+
+			e\trace("Jolt", "Loading content `$content`");
+
+			$v = "$dir/$content";
+			if(pathinfo($v, PATHINFO_EXTENSION) !== 'lhtml')
+				$v .= '.lhtml';
+
+			/**
+			 * Append the section before building
+			 */
+			$node = self::getSection($section, $v);
+			$node->appendTo($this);
+			return;
+		}
+
+		throw new Exception('Incorrect use of `<:jolt section="'.$section.'">` without providing a `parent` or `content` attribute');
+	}
+
 }
