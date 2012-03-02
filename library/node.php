@@ -438,6 +438,14 @@ class Node {
 		if(isset($source) && isset($as)) $this->_data()->source($source, $as);
 		
 	}
+
+	/**
+	 * Simple sourcing of an array
+	 * @author Kelly Becker
+	 */
+	public function source($as, $source) {
+		return $this->_data()->source($source, $as);
+	}
 	
 	/**
 	 * Parse the variables in a string
