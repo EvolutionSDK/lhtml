@@ -299,11 +299,13 @@ class Node {
 		$this->attributes = $attrs; return true;
 	}
 	
-	public function build() {
+	public function build($pre = true) {
 
-		$this->_init_scope();
+		if($pre) {
+			$this->_init_scope();
 
-		$this->prebuild();
+			$this->prebuild();
+		}
 
 		if(isset($_GET['--lhtml-stack']) && $_GET['--lhtml-stack'] == $this->fake_element)
 			dump($this);
