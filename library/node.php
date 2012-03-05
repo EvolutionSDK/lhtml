@@ -395,7 +395,7 @@ class Node {
 		if(isset($this->_data)) return $this->_data;
 		else {
 			if(!($this->_ instanceof Node))
-				throw new Exception("Parent of `&lt;$this->fake_element&gt;` is not a Node");
+				throw new Exception("Parent of `&lt;$this->fake_element ".$this->_attributes_parse()."&gt;` is not a Node");
 			return $this->_->_data();
 		}
 	}

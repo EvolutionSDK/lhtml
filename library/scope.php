@@ -2,6 +2,7 @@
 
 namespace Bundles\LHTML;
 use Exception;
+use Closure;
 use e;
 
 class Scope {
@@ -215,6 +216,10 @@ class Scope {
 			//else throw new \Exception("IXML Scope no function was called when calling {$var_map}");
 		}
 		foreach($map as $i=>$var) {
+
+			if($source instanceof Closure)
+				$source = $source();
+
 			if($map[0] == ':get' && $map[1] == 'test') echo(' | i:'.$i.' | flag: '.$flag_first);
 			if($flag_first && $i < $flag_first) continue;
 			if(!isset($source) || (!$source && !is_array($source))) break;
@@ -222,9 +227,10 @@ class Scope {
 			if(is_array($var) && is_object($source)) {
 				if(method_exists($source, $var['func'])) $source = call_user_func_array(array($source, $var['func']), $var['args']);
 				else if(method_exists($source, '__call')) $source = call_user_func_array(array($source, $var['func']), $var['args']);
- 			} 
+ 			}
 
 			else if(is_object($source)) {
+
 				try {
 					if(isset($source->$var)) $source = $source->$var;
 					else if(!is_null($var) && method_exists($source, $var)) $source = $source->$var();
