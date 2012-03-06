@@ -225,8 +225,23 @@ class Scope {
 			if(!isset($source) || (!$source && !is_array($source))) break;
 			
 			if(is_array($var) && is_object($source)) {
-				if(method_exists($source, $var['func'])) $source = call_user_func_array(array($source, $var['func']), $var['args']);
-				else if(method_exists($source, '__call')) $source = call_user_func_array(array($source, $var['func']), $var['args']);
+				/**
+				 * Allow catching of exceptions by prepending @ to a method
+				 * @author Nate Ferrero
+				 */
+				$throw = true;
+				if($var['func'][0] === '@') {
+					$throw = false;
+					$var['func'] = substr($var['func'], 1);
+				}
+				try {
+					if(method_exists($source, $var['func'])) $source = call_user_func_array(array($source, $var['func']), $var['args']);
+					else if(method_exists($source, '__call')) $source = call_user_func_array(array($source, $var['func']), $var['args']);
+ 				} catch(Exception $e) {
+ 					e\Trace_Exception($e);
+ 					if($throw)
+ 						throw $e;
+ 				}
  			}
 
 			else if(is_object($source)) {
@@ -476,11 +491,11 @@ class Scope {
 		if(strpos($content, '{') === false) return array();
 		// parse out the variables
 		preg_match_all(
-			"/{([\w:|.\,\(\)\/\-\% \[\]\?'=]+?)}/", //regex
+			"/{([\w:@|.\,\(\)\/\-\% \[\]\?'=]+?)}/", //regex
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
-		);
+		);dump($matches_vars);
 		
 		foreach((array)$matches_vars as $var) {
 			$vars[] = $var[1];
@@ -495,7 +510,7 @@ class Scope {
 		if(strpos($content, '[') === false) return array();
 		// parse out the variables
 		preg_match_all(
-			"/\[([\w:|.\,\(\)\/\-\% \[\]\?'=]+?)\]/", //regex
+			"/\[([\w:@|.\,\(\)\/\-\% \[\]\?'=]+?)\]/", //regex
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
@@ -513,7 +528,7 @@ class Scope {
 		if(strpos($content, '(') === false) return array();
 		// parse out the variables
 		preg_match_all(
-			"/([\w\:]+?)\(([\w:|.\,=@\(\)\/\-\%& ]*?)\)/", //regex
+			"/([\w\:@]+?)\(([\w:@|.\,=@\(\)\/\-\%& ]*?)\)/", //regex
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings

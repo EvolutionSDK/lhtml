@@ -11,24 +11,12 @@ class Select extends Node {
 		$this->element = 'select';
 	}
 	
-	public function build() {		
-		$this->_init_scope();
-		$output = "";
-		
+	public function prebuild() {
+
 		/**
-		 * If requires iteration
-		 * else just execute the loop once
+		 * @todo Fix local select types
+		 * @author Nate Ferrero
 		 */
-		if($this->is_loop) {
-			$this->_data()->reset();
-		} else {
-			$once = 1;
-		}
-		
-		/**
-		 * Start build loop
-		 */
-		while($this->is_loop ? $this->_data()->iteratable() : $once--) {
 
 		/**
 		 * Alternate TAG Info
@@ -46,11 +34,13 @@ class Select extends Node {
 			list($var, $val) = explode('=', $opt);
 			$a2opts[$var] = $val;
 		} $aopts = $a2opts;
-			
+
 		/**
-		* If is a real element create the opening tag
-		*/
-		if($this->element !== '' && $this->element) $output .= "<$this->element".$this->_attributes_parse().'>';
+		 * Cache the selected attribute to avoid re-parsing
+		 * @author Nate Ferrero
+		 */
+		$this->attributes['selected'] = isset($this->attributes['selected']) ? 
+			$this->_string_parse($this->attributes['selected']) : null;
 		
 		/**
 		 * Render the code
@@ -65,43 +55,33 @@ class Select extends Node {
 			 * If it cant find a local select handler inside our tag then call an event
 			 */
 			else {
-				$tmp = e::$events->{'lhtmlNodeSelect'.ucwords(strtolower($atype))}($aopts, $this->_string_parse($this->attributes['selected']));
+				$tmp = e::$events->{'lhtmlNodeSelect'.ucwords(strtolower($atype))}($aopts, $selected);
 				$tmp = count($tmp) < 1 ? '' : array_shift($tmp);
 				if(!is_string($tmp)) throw new Exception("Select event must return a string.");
 				else $output .= $tmp;
 			} 
 		}
 
-		else if(!empty($this->children)) foreach($this->children as $child) {
-			if($child->fake_element !== 'option') continue;
-							
-			if(isset($this->attributes['selected']) && $this->_string_parse($this->attributes['selected']) == $child->attributes['value'])
-				$child->attributes['selected'] = 'selected';
-			
-			if(is_object($child)) $output .= $child->build();
-		}
-		
+	}
+
+	/**
+	 * Use before build instead of a custom build
+	 * @author Nate Ferrero
+	 */
+	public function childNodeBeforeBuild(&$child) {
+		if(!($child instanceof Node))
+			return;
+		$value = isset($child->attributes['value']) ? 
+			$child->_string_parse($child->attributes['value']) : null;
+
 		/**
-		 * Close the tag
+		 * Since it's the same "Node" being iterated, we must set AND unset the selected attribute
+		 * @author Nate Ferrero
 		 */
-		if($this->element !== '' && $this->element) $output .= "</$this->element>";
-		
-		/**
-		 * If a loop increment the pointer
-		 */
-		if($this->is_loop) $this->_data()->next();
-		
-		/**
-		 * End build loop
-		 */
-		}
-		
-		if($this->is_loop) $this->_data()->reset();
-		
-		/**
-		 * Return the rendered page
-		 */
-		return $output;
+		if(!is_null($value) && $value == $this->attributes['selected'])
+			$child->attributes['selected'] = 'selected';
+		else
+			unset($child->attributes['selected']);
 	}
 
 	private function _select_month($opts) {

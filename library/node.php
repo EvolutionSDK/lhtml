@@ -328,6 +328,14 @@ class Node {
 		while($this->is_loop ? $this->_data()->iteratable() : $once--) {
 		
 		/**
+		 * Allow manipulation of child elements
+		 * @author Nate Ferrero
+		 */
+		if($this->_ instanceof Node && method_exists($this->_, 'childNodeBeforeBuild')) {
+			$this->_->childNodeBeforeBuild($this);
+		}
+		
+		/**
 		 * If is a complete tag render it and return
 		 */
 		if(in_array($this->element, self::$complete_tags)) return "<$this->element".$this->_attributes_parse().' />';
@@ -348,6 +356,7 @@ class Node {
 		 * Loop thru the children and populate this tag
 		 */
 		if(!empty($this->children)) foreach($this->children as $child) {
+			
 			if($child instanceof Node) {
 				if($child->_ !== $this)
 					$child->attributes['lhtml_node_warning'] = "Parent node is different than the node which included this node as a child, expect scope issues.";
@@ -563,7 +572,7 @@ class Node {
 		if(strpos($content, '{') === false) return array();
 		// parse out the variables
 		preg_match_all(
-			"/{([\w:|.\,\(\)\/\-\% \[\]\?'=]+?)}/", //regex
+			"/{([\w:@|.\,\(\)\/\-\% \[\]\?'=]+?)}/", //regex
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
@@ -584,7 +593,7 @@ class Node {
 		if(strpos($content, '[') === false) return array();
 		// parse out the variables
 		preg_match_all(
-			"/\[([\w:|.\,\(\)\/\-\% \[\]\?'=]+?)\]/", //regex
+			"/\[([\w:@|.\,\(\)\/\-\% \[\]\?'=]+?)\]/", //regex
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
@@ -604,7 +613,7 @@ class Node {
 		if(strpos($content, '(') === false) return array();
 		// parse out the variables
 		preg_match_all(
-			"/([\w]+?)\(([\w:|.\,=@\(\)\/\-\%& ]*?)\)/", //regex
+			"/([\w\:@]+?)\(([\w:@|.\,=@\(\)\/\-\%& ]*?)\)/", //regex
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
