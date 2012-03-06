@@ -5,9 +5,15 @@ use Bundles\Text\Lexer;
 use Exception;
 use e;
 
+/**
+ * LHTML Language Parser
+ * @author Nate Ferrero
+ */
 class Parser {
 	
-	// The entire syntax is defined here as what token the next char implies
+	/**
+	 * The entire syntax is defined here as what token the next char implies
+	 */
 	private static $grammar = array(
 		
 		# _
@@ -108,7 +114,7 @@ class Parser {
 			array(	'match-sequence' 	=> array(
 						'tag-start' 		=> '<',
 						'tag-open-name' 	=> 'script',
-						'*' 				=> '*', // Allow attributes
+						'*' 				=> '*', # Allow attributes
 						'tag-end-inside'	=> '>',
 					),
 					
@@ -120,7 +126,7 @@ class Parser {
 			array(	'match-sequence' 	=> array(
 						'tag-start' 		=> '<',
 						'tag-open-name' 	=> 'style',
-						'*' 				=> '*', // Allow attributes
+						'*' 				=> '*', # Allow attributes
 						'tag-end-inside'	=> '>',
 					),
 					
@@ -128,7 +134,7 @@ class Parser {
 					'end'		=> '</style>'
 			),
 			
-			/*	For Later?
+			/* For Later?
 					
 					'default'		=> array(
 						'</script>'	=> '!default',
@@ -149,56 +155,83 @@ class Parser {
 	
 	public static function parseString($string) {
 		
-		// Load lexer
+		/**
+		 * Load lexer
+		 */
 		$lexer = e::$lexer;
 		$lexer->grammar(self::$grammar)->sourceString($string);
 		
-		// Parse lexer
+		/**
+		 * Parse lexer
+		 */
 		return self::parseLexer($lexer);
 	}
 
 	public static function parseFile($file) {
-		// Load lexer
+		/**
+		 * Load lexer
+		 */
 		$lexer = e::$lexer;
 		$lexer->grammar(self::$grammar)->sourceFile($file);
 		
-		// Parse lexer
+		/**
+		 * Parse lexer
+		 */
 		return self::parseLexer($lexer);
 	}
 		
 	public static function parseLexer(&$lexer) {
 		
-		// Debug if set
+		/**
+		 * Debug if set
+		 */
 		if(isset($_GET['--lhtml-tokens'])) {
 			echo $lexer->debugHTML();
 			e\complete();
 		}
 		
-		// Load tokens
+		/**
+		 * Load tokens
+		 */
 		$tokens = $lexer->tokenize();
 		
-		// Track open tags
+		/**
+		 * Track open tags
+		 */
 		$openTags = array();
 		$openTagsDepth = -1;
 		
-		// Create the root stack
+		/**
+		 * Create the root stack
+		 */
 		$stack = new Node('');
 		
-		// Add file to scope
+		/**
+		 * Add file to scope
+		 */
 		$stack->_data->__file__ = $lexer->getFile();
 		$openFile = $lexer->getFile();
 		
-		// Source code positions
+		/**
+		 * Source code positions
+		 */
 		$openLine = 0;
 		$openCol = 0;
 		
-		// Loop through tokens
+		/**
+		 * Loop through tokens
+		 */
 		foreach($tokens as $token) {
 			
-			// Decide what to do based on token
+			/**
+			 * Decide what to do based on token
+			 */
 			switch($token->name) {
 				
-				// Doctype tag works but TODO possible improvement
+				/**
+				 * Doctype tag works
+				 * @todo possible improvement
+				 */
 				case 'tag-doctype':
 					$stack->_nchild($token->value, (object) array(
 						'line' => $openLine,
@@ -208,20 +241,28 @@ class Parser {
 					));
 					break;
 				
-				// Start tag, just to record line and column
+				/**
+				 * Start tag, just to record line and column
+				 */
 				case 'tag-start':
 					$openLine = $token->line;
 					$openCol = $token->col;
 					break;
 				
-				// Open tag
+				/**
+				 * Open tag
+				 */
 				case 'tag-open-name':
 					
-					// Record open tag
+					/**
+					 * Record open tag
+					 */
 					$openTagsDepth++;
 					$openTags[$openTagsDepth] = $token->value;
 					
-					// Add element to the node stack
+					/**
+					 * Add element to the node stack
+					 */
 					$stack = $stack->_nchild($token->value, (object) array(
 						'line' => $openLine,
 						'col' => $openCol,
@@ -229,44 +270,69 @@ class Parser {
 					));
 					break;
 					
-				// Close tag
+				/**
+				 * Close tag
+				 */
 				case 'tag-end-close':
 				case 'tag-close-name':
 					
-					// Check for long (full) tag
+					/**
+					 * Check for long (full) tag
+					 */
 					$long = $token->name === 'tag-close-name';
 					
-					// Check that this matches the currently open tag
+					/**
+					 * Check that this matches the currently open tag
+					 */
 					$oname = $openTags[$openTagsDepth];
 					if($long && $oname !== $token->value)
 						throw new Exception("LHTML Parse Error: Found closing tag `&lt;/$token->value&gt;`
 						when `&lt;$oname&gt;`still needs to be closed
-						on line $token->line at character $token->col");	
+						on line $token->line at character $token->col");
 					
-					// Close the tag
+					/**
+					 * Close the tag
+					 */
 					unset($openTags[$openTagsDepth]);
 					$openTagsDepth--;
+
+					/**
+					 * Allow manipulation of tags after parsed
+					 * @author Nate Ferrero
+					 */
+					if(method_exists($stack, 'ready'))
+						$stack->ready();
 					
-					// Move up the stack
+					/**
+					 * Move up the stack
+					 */
 					$stack = $stack->_;
 					break;
 				
-				// Tag attribute name
+				/**
+				 * Tag attribute name
+				 */
 				case 'tag-attr-name':
 					$attr = $token->value;
 					break;
 					
-				// Tag attribute value
+				/**
+				 * Tag attribute value
+				 */
 				case 'tag-attr-value':
 					$stack->_attr($attr, $token->value);
 					break;
 					
-				// Tag contents
+				/**
+				 * Tag contents
+				 */
 				case 'default':
 				case 'tag-contents':
 				case 'cdata-block':
 					
-					// Save the string as a child
+					/**
+					 * Save the string as a child
+					 */
 					$stack->_cdata($token->value);
 					break;
 					
@@ -275,6 +341,9 @@ class Parser {
 			}
 		}
 		
+		/**
+		 * Return the stack
+		 */
 		return $stack;
 	}
 }

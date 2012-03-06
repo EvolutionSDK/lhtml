@@ -143,10 +143,13 @@ class Bundle {
 
 class Instance {
 	
-	private $file;
-	private $string;
+	private $file = null;
+	private $string = null;
 	public $stack;
 	
+	/**
+	 * @todo Get this out of LHTML!!!!
+	 */
 	public function _get_special_vars($matcher) {
 		switch($matcher) {
 			case ':id' :
@@ -164,6 +167,7 @@ class Instance {
 	
 	public function file($file) {
 		$this->file = $file;
+		$this->string = null;
 		if($this->stack)
 			unset($this->stack);
 		return $this;
@@ -171,16 +175,21 @@ class Instance {
 	
 	public function string($string) {
 		$this->string = $string;
+		$this->file = null;
 		if($this->stack)
 			unset($this->stack);
 		return $this;
 	}
 	
+	/**
+	 * Parse the loaded file
+	 * @author Nate Ferrero
+	 */
 	public function parse($skipCache = false) {
-		if(!isset($this->file) && !isset($this->string))
+		if(is_null($this->file) && is_null($this->string))
 			throw new Exception("LHTML: No file or string specified to parse");
 		
-		if(isset($this->file)) {
+		if(!is_null($this->file)) {
 
 			/**
 			 * Check cache for existing stack
@@ -211,7 +220,7 @@ class Instance {
 
 			unset($this->file);
 		}
-		else if(isset($this->string)) {
+		else if(!is_null($this->string)) {
 			$this->stack = Parser::parseString($this->string);
 			unset($this->string);
 		}
