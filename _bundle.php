@@ -2,11 +2,14 @@
 
 namespace Bundles\LHTML;
 use Bundles\Router\NotFoundException;
+use RecursiveDirectoryIterator;
+use RecursiveIteratorIterator;
 use Exception;
 use stack;
 use e;
 
 class Bundle {
+
 	public static $url_vars = array();
 	
 	public function __getBundle() {
@@ -35,6 +38,34 @@ class Bundle {
 	
 	public function _on_lhtml_add_hook($hook, $item) {
 		
+	}
+
+	/**
+	 * Get all routes for the sitemap
+	 * @author Nate Ferrero
+	 */
+	public function _on_portal_sitemap($path, $dir) {
+		$dir .= '/lhtml';
+		$all = array();
+		try {
+			$objects = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($dir), RecursiveIteratorIterator::SELF_FIRST);
+			foreach($objects as $name => $object){
+
+				if(pathinfo($name, PATHINFO_EXTENSION) !== 'lhtml')
+					continue;
+
+				/**
+				 * Remove the start dir
+				 */
+				$name = substr($name, strlen($dir));
+
+				/**
+				 * Remove .lhtml from the end and return
+				 */
+			    $all[substr($name, 0, strlen($name) - 6)] = ucfirst(pathinfo($name, PATHINFO_FILENAME));
+			}
+		} catch(Exception $e) {}
+		return $all;
 	}
 	
 	public function _on_portal_route($path, $dir) {
