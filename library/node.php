@@ -253,6 +253,20 @@ class Node {
 		}
 		return $matches;
 	}
+
+	/**
+	 * Check for presence of immediate child with tag name
+	 * @author Nate Ferrero
+	 */
+	public function hasImmediateChild($tag) {
+		$tag = strtolower($tag);
+		foreach($this->children as $child) {
+			if(!($child instanceof Node)) continue;
+			if(strtolower($child->fake_element) === $tag)
+				return true;
+		}
+		return false;
+	}
 	
 	public function _cdata($cdata) {
 		if(!is_string($cdata)) return false;
