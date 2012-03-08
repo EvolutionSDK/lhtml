@@ -104,7 +104,18 @@ class Scope {
 		
 		$flag_first = false;
 
-		if(is_array($map[0]) && isset($map[0]['func']) && strpos($map[0]['func'],':')===0 && self::hookExists($map[0]['func'])) {
+		/**
+		 * Loop source index
+		 */
+		if($map[0] == ':index') {
+			$source = $this->source_pointer;
+			$flag_first = 1;
+		}
+
+		/**
+		 * Hook functions
+		 */
+		else if(is_array($map[0]) && isset($map[0]['func']) && strpos($map[0]['func'],':')===0 && self::hookExists($map[0]['func'])) {
 
 			$hook = self::getHook($map[0]['func']);
 
