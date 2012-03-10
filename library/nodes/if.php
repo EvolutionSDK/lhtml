@@ -154,6 +154,25 @@ class _If extends Node {
 			
 		}
 		
+		/**
+		 * Compare first char
+		 * @author Nate Ferrero
+		 */
+		if(isset($this->attributes['firstChar'])) {
+		
+			$v = $this->attributes['var'];
+			
+			if(strpos($v, '{') === false) $v = '{'.$v.'}';
+
+			$vars = $this->extract_vars($v);
+			if($vars) foreach($vars as $var) {
+				$v = $this->_data()->$var;
+			}
+
+			$retval = substr($v, 0, 1) == $this->attributes['firstChar'];
+			
+		}
+		
 		if(isset($this->attributes['not'])) {
 		
 			$v = $this->attributes['var'];
