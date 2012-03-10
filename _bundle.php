@@ -142,8 +142,23 @@ class Bundle {
 			# set the url vars to use
 			self::$url_vars = $vars;
 			
-			// Parse the lhtml file and load the stack
+			/**
+			 * Allow skipping cache
+			 * @author Nate Ferrero
+			 */
 			$skipCache = isset($_GET['--lhtml-no-cache']) || isset($_GET['--lhtml-tokens']);
+
+			/**
+			 * Always skip cache
+			 * @todo Figure out how to do this intelligently
+			 * @author Nate Ferrero
+			 */
+			$skipCache = true;
+
+			/**
+			 * Parse the LHTML file
+			 * @author Nate Ferrero
+			 */
 			$start = microtime(true);
 			$out = e::$lhtml->file($file)->parse($skipCache)->build();
 			$end = microtime(true);
