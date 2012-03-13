@@ -117,8 +117,8 @@ class Bundle {
 			$matched = false;	$vars = array();	$nodir = false; $badmatch = false;
 			$p = 1;
 			foreach($path as $key => $segment) {
-				if($matched == 'file') $vars[] = $segment;
-				if((!$matched || $matched == 'dir') && is_dir("$dir/$segment")) {
+	 			if($matched == 'file') $vars[] = $segment;
+	 			if((!$matched || $matched == 'dir') && is_dir("$dir/$segment")) {
 					$dir .= "/$segment";
 					$matched = 'dir';
 				}
@@ -131,7 +131,7 @@ class Bundle {
 				}
 			}
 			
-			if(!$badmatch && $matched != 'file' && is_file("$dir/index.lhtml")) {
+			if($badmatch && $matched != 'file' && is_file("$dir/index.lhtml")) {
 				$file = "$dir/index.lhtml";
 				$matched = 'index';
 			}
