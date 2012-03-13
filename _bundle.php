@@ -117,14 +117,18 @@ class Bundle {
 			$matched = false;	$vars = array();	$nodir = false; $badmatch = false;
 			$p = 1;
 			foreach($path as $key => $segment) {
-				if($matched == 'file') $vars[] = $segment;
-				if((!$matched || $matched == 'dir') && is_dir("$dir/$segment")) {
-					$dir .= "/$segment";
-					$matched = 'dir';
-				}
-				elseif(is_file("$dir/$segment.lhtml")) {
+	 			if($matched == 'file') $vars[] = $segment;
+				if(is_file("$dir/$segment.lhtml")) {
 					$file = "$dir/$segment.lhtml";
 					$matched = 'file';
+				}
+				elseif(is_file("$dir/$segment/index.lhtml")) {
+					$file = "$dir/$segment/index.lhtml";
+					$matched = 'file';
+				}
+				elseif((!$matched || $matched == 'dir') && is_dir("$dir/$segment")) {
+					$dir .= "/$segment";
+					$matched = 'dir';
 				}
 				elseif($matched != 'file') {
 					$badmatch = true;
