@@ -122,20 +122,20 @@ class Bundle {
 					$file = "$dir/$segment.lhtml";
 					$matched = 'file';
 				}
-				elseif(is_file("$dir/$segment/index.lhtml")) {
-					$file = "$dir/$segment/index.lhtml";
-					$matched = 'file';
-				}
 				elseif((!$matched || $matched == 'dir') && is_dir("$dir/$segment")) {
 					$dir .= "/$segment";
-					$matched = 'dir';
+					if(is_file("$dir/index.lhtml")) {
+						$file = "$dir/index.lhtml";
+						$matched = 'index';
+					}
+					else $matched = 'dir';
 				}
 				elseif($matched != 'file') {
 					$badmatch = true;
 				}
 			}
 			
-			if(!$badmatch && $matched != 'file' && is_file("$dir/index.lhtml")) {
+			if(!$badmatch && ($matched != 'file' || $matched != 'index') && is_file("$dir/index.lhtml")) {
 				$file = "$dir/index.lhtml";
 				$matched = 'index';
 			}
