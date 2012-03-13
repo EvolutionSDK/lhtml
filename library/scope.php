@@ -298,6 +298,7 @@ class Scope {
 	
 	public function parse($var) {
 		$tt = microtime(true);
+		$original = $var;
 		
 		$extract_vars = $this->extract_vars($var);
 		if(!empty($extract_vars)) foreach($extract_vars as $rv) {
@@ -305,12 +306,32 @@ class Scope {
 			$var = str_replace('{'.$rv.'}', $val, $var);
 		}
 		
+		$subvars = false;
 		$extract_subvars = $this->extract_subvars($var);
-		if(!empty($extract_subvars)) foreach($extract_subvars as $rv) {
-			$val = (string) $this->get($rv);
-			$var = str_replace('['.$rv.']', $val, $var);
+		if(!empty($extract_subvars)) {
+			$subvars = true;
+			foreach($extract_subvars as $rv) {
+				$val = (string) $this->get($rv);
+				$var = str_replace('['.$rv.']', $val, $var);
+			}
 		}
 		
+		/**
+		 * Re-extract variables that have been populated with subvars
+		 * Allows for "variable variables" like : {[varname].something}
+		 * @author Nate Ferrero
+		 * @todo Implement this properly
+		 *
+		if($subvars && !empty($val)) {
+			$replace = $this->get($var);
+			/*if(!is_string($replace))
+				$replace = e\json_encode_safe($replace);*//*
+			if(is_string($replace)) {
+				$var = str_replace($var, $replace, $var);
+				var_dump($var);
+			}
+		}
+		*/
 		if(strpos($var, ' ? ') !== false) {
 			list($cond, $result) = explode(' ? ', $var);
 			$else = false;
@@ -510,7 +531,7 @@ class Scope {
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
-		);dump($matches_vars);
+		);
 		
 		foreach((array)$matches_vars as $var) {
 			$vars[] = $var[1];
