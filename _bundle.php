@@ -118,24 +118,20 @@ class Bundle {
 			$p = 1;
 			foreach($path as $key => $segment) {
 	 			if($matched == 'file') $vars[] = $segment;
-				if(is_file("$dir/$segment.lhtml")) {
+	 			if((!$matched || $matched == 'dir') && is_dir("$dir/$segment")) {
+					$dir .= "/$segment";
+					$matched = 'dir';
+				}
+				elseif(is_file("$dir/$segment.lhtml")) {
 					$file = "$dir/$segment.lhtml";
 					$matched = 'file';
-				}
-				elseif((!$matched || $matched == 'dir') && is_dir("$dir/$segment")) {
-					$dir .= "/$segment";
-					if(is_file("$dir/index.lhtml")) {
-						$file = "$dir/index.lhtml";
-						$matched = 'index';
-					}
-					else $matched = 'dir';
 				}
 				elseif($matched != 'file') {
 					$badmatch = true;
 				}
 			}
 			
-			if(!$badmatch && ($matched != 'file' || $matched != 'index') && is_file("$dir/index.lhtml")) {
+			if($badmatch && $matched != 'file' && is_file("$dir/index.lhtml")) {
 				$file = "$dir/index.lhtml";
 				$matched = 'index';
 			}
