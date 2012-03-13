@@ -338,7 +338,11 @@ class Scope {
 				$val = $this->get($cond);
 				$cval = $this->get($compare);
 				
-				if($val == $cval) $var = $result;
+				/**
+				 * Make sure the values are not empty
+				 * @author Kelly Becker
+				 */
+				if($val == $cval && !empty($val) && !empty($cval)) $var = $result;
 				else $var = $else;
 			}
 			else if(strpos($cond, ' != ') !== false) {
@@ -352,7 +356,7 @@ class Scope {
 			else if(strpos($cond, ' () ') !== false) {
 				list($cond, $compare) = explode(' () ', $cond);
 				$val = $this->get($cond);
-				$cval = explode(',', $this->get($cond));
+				$cval = explode(',', $this->get($compare));
 				$retval = false;
 				foreach($cval as $tmp) if($val == trim($tmp)) $retval = true;
 				if($retval) $var = $result;
@@ -361,7 +365,7 @@ class Scope {
 			else if(strpos($cond, ' () ') !== false) {
 				list($cond, $compare) = explode(' () ', $cond);
 				$val = $this->get($cond);
-				$cval = explode(',', $this->get($cond));
+				$cval = explode(',', $this->get($compare));
 				$retval = true;
 				foreach($cval as $tmp) if($val == trim($tmp)) $retval = false;
 				if($retval) $var = $result;
