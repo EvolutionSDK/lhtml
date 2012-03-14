@@ -32,12 +32,13 @@ class Parser {
 		'tag-special'		=> array(	'!' => '#error',
 										'd' => 'tag-doctype',
 										'D' => 'tag-doctype',
-										'-' => 'tag-comment',
+										'-' => '&tag-comment',
 										'*' => '&tag-contents'			),
 										
 		# <!-_
-		'tag-comment'		=> array(	'extended' =>
-									array('-->' => 'tag-end-outside'	)
+		'tag-comment'		=> array(	'extended' => array(
+											'-->' => 'tag-end-outside'
+										)
 																		),
 		
 		# <!d_
@@ -82,8 +83,8 @@ class Parser {
 										'/' => '#error',
 										'=' => 'tag-attr-equal'			),
 		# <a ... b=_						
-		'tag-attr-equal'		=> array(	'"' => 'tag-attr-quote',
-											'*' => '#error'				),
+		'tag-attr-equal'	=> array(	'"' => 'tag-attr-quote',
+										'*' => '#error'					),
 		# <a ... b="_						
 		'tag-attr-quote'	=> array(	'"' => 'tag-attr-qend',
 										'*' => 'tag-attr-value'	),
@@ -334,6 +335,18 @@ class Parser {
 					 * Save the string as a child
 					 */
 					$stack->_cdata($token->value);
+					break;
+
+				/**
+				 * Comment passthrough
+				 */
+				case 'tag-comment':
+					
+					/**
+					 * Save the comment as a child
+					 */
+					if($token->value[1] !== '@')
+						$stack->_cdata("<!-$token->value-->");
 					break;
 					
 				default:
