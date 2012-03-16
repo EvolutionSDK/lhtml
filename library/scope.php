@@ -248,6 +248,7 @@ class Scope {
 				try {
 					if(method_exists($source, $var['func'])) $source = call_user_func_array(array($source, $var['func']), $var['args']);
 					else if(method_exists($source, '__call')) $source = call_user_func_array(array($source, $var['func']), $var['args']);
+					else $source = false;
  				} catch(Exception $e) {
  					e\Trace_Exception($e);
  					if($throw)
@@ -261,6 +262,7 @@ class Scope {
 					if(isset($source->$var)) $source = $source->$var;
 					else if(!is_null($var) && method_exists($source, $var)) $source = $source->$var();
 					else if(!is_null($var) && method_exists($source, '__call')) $source = $source->$var();
+					else $source = false;
 				}
 				catch(Exception $e) {
 					if(!isset($e->severity) || $e->severity < 3)
