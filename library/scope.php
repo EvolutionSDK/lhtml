@@ -263,6 +263,7 @@ class Scope {
 					else if(!is_null($var) && method_exists($source, $var)) $source = $source->$var();
 					else if(!is_null($var) && method_exists($source, '__call')) $source = $source->$var();
 					else $source = false;
+
 				}
 				catch(Exception $e) {
 					if(!isset($e->severity) || $e->severity < 3)
