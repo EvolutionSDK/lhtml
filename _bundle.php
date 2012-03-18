@@ -131,7 +131,7 @@ class Bundle {
 				}
 			}
 			
-			if($badmatch && $matched != 'file' && is_file("$dir/index.lhtml")) {
+			if($matched != 'file' && is_file("$dir/index.lhtml")) {
 				$file = "$dir/index.lhtml";
 				$matched = 'index';
 			}
