@@ -335,11 +335,21 @@ class Node {
 		} else {
 			$once = 1;
 		}
+
+		/**
+		 * Start counting loops
+		 */
+		$loop = 0;
 		
 		/**
 		 * Start build loop
 		 */
 		while($this->is_loop ? $this->_data()->iteratable() : $once--) {
+		
+		/**
+		 * Increment Loop Count
+		 */
+		$loop++;
 		
 		/**
 		 * Allow manipulation of child elements
@@ -402,6 +412,9 @@ class Node {
 		 * End build loop
 		 */
 		}
+
+		if($loop === 0) foreach($this->children as $node)
+			if($node->fake_element == ':empty') return $node->build(true);
 		
 		if($this->is_loop) $this->_data()->reset();
 		
