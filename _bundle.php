@@ -25,19 +25,6 @@ class Bundle {
 		 * Add basic hooks
 		 */
 		e::configure('lhtml')->activeAddKey('hook', ':e', new e_handle);
-		e::configure('lhtml')->activeAddKey('hook', ':slug', function() { return e::$lhtml->_get_special_vars(':slug'); });
-		e::configure('lhtml')->activeAddKey('hook', ':id', function() { return e::$lhtml->_get_special_vars(':id'); });
-		e::configure('lhtml')->activeAddKey('hook', ':urlVars', function() { return e::$lhtml->_get_special_vars(':urlVars'); } );
-		
-		/**
-		 * Set $_GET and $_POST to hooks
-		 */
-		e::configure('lhtml')->activeAddKey('hook', ':get', &$_GET);
-		e::configure('lhtml')->activeAddKey('hook', ':post', &$_POST);
-	}
-	
-	public function _on_lhtml_add_hook($hook, $item) {
-		
 	}
 
 	/**
@@ -192,25 +179,7 @@ class Instance {
 	private $file = null;
 	private $string = null;
 	public $stack;
-	
-	/**
-	 * @todo Get this out of LHTML!!!!
-	 */
-	public function _get_special_vars($matcher) {
-		switch($matcher) {
-			case ':id' :
-				if(isset(Bundle::$url_vars[0]) && is_numeric(Bundle::$url_vars[0])) return Bundle::$url_vars[0];
-			break;
-			case ':slug':
-				if(isset(Bundle::$url_vars[0])) return Bundle::$url_vars[0];
-			break;
-			case ':urlVars':
-				if(isset(Bundle::$url_vars[0])) return Bundle::$url_vars;
-			break;
-		}
-		return null;
-	}
-	
+
 	public function file($file) {
 		$this->file = $file;
 		$this->string = null;
@@ -219,7 +188,7 @@ class Instance {
 		return $this;
 	}
 	
-	public function string($string) {
+	public function string($string, $timestamp = null) {
 		$this->string = $string;
 		$this->file = null;
 		if($this->stack)
@@ -302,6 +271,9 @@ class RebuildWithNewStack extends Exception {
 	public $stack;
 }
 
+/**
+ * Allow access to the e stack in LHTML
+ */
 class e_handle {
 	
 	public function __call($method, $args) {
