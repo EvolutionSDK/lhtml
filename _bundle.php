@@ -128,26 +128,13 @@ class Bundle {
 			
 			# set the url vars to use
 			self::$url_vars = $vars;
-			
-			/**
-			 * Allow skipping cache
-			 * @author Nate Ferrero
-			 */
-			$skipCache = isset($_GET['--lhtml-no-cache']) || isset($_GET['--lhtml-tokens']);
-
-			/**
-			 * Always skip cache
-			 * @todo Figure out how to do this intelligently
-			 * @author Nate Ferrero
-			 */
-			$skipCache = true;
 
 			/**
 			 * Parse the LHTML file
 			 * @author Nate Ferrero
 			 */
 			$start = microtime(true);
-			$out = e::$lhtml->file($file)->parse($skipCache)->build();
+			$out = e::$lhtml->file($file)->parse(null, true)->build();
 			$end = microtime(true);
 			$time = ($end - $start) * 1000;
 
@@ -200,9 +187,12 @@ class Instance {
 	 * Parse the loaded file
 	 * @author Nate Ferrero
 	 */
-	public function parse($skipCache = false) {
+	public function parse($parent = null, $topLevel = false) {
 		if(is_null($this->file) && is_null($this->string))
 			throw new Exception("LHTML: No file or string specified to parse");
+
+		if(is_null($parent))
+			$parent = new Node;
 		
 		if(!is_null($this->file)) {
 
@@ -211,63 +201,69 @@ class Instance {
 			 * @author Nate Ferrero
 			 */
 			$ctime = e::$cache->timestamp('lhtml', $this->file);
-			if($skipCache || $ctime === false || filemtime($this->file) > $ctime) {
+			if(isset($_GET['--lhtml-no-cache']) || $ctime === false || filemtime($this->file) > $ctime) {
 
 				/**
 				 * Actually parse the file
 				 * @author Nate Ferrero
 				 */
-				$this->stack = Parser::parseFile($this->file);
+				$stack = Parser::parseFile($this->file, $parent);
 
 				/**
-				 * If using cache, store
+				 * Store in cache
 				 * @author Nate Ferrero
 				 */
-				if(!$skipCache)
-					e::$cache->store('lhtml', $this->file, $this->stack);
-			} else {
-
-				/**
-				 * Get the stack from the cache
-				 */
-				$this->stack = e::$cache->get('lhtml', $this->file);
+				e::$cache->store('lhtml', $this->file, $stack);
 			}
+
+			/**
+			 * Get the stack from the cache
+			 */
+			$this->stack = e::$cache->get('lhtml', $this->file);
 
 			unset($this->file);
 		}
 		else if(!is_null($this->string)) {
-			$this->stack = Parser::parseString($this->string);
+
+			/**
+			 * Todo: add caching for strings
+			 * @author Nate Ferrero
+			 */
+			$this->stack = Parser::parseString($this->string, $parent);
 			unset($this->string);
 		}
-		
-		return $this;
-	}
-	
-	public function build() {
-		if(!isset($this->stack))
-			$this->parse();
 
 		/**
-		 * This creates a loop that either returns or builds the new stack, as needed
+		 * Handle stack ready
 		 * @author Nate Ferrero
 		 */
-		while(true) {
+
+		/**
+		 * This creates a loop that either returns or readies the new stack, as needed
+		 * @author Nate Ferrero
+		 */
+		while($topLevel) {
 			try {
-				return $this->stack->build();
+				$this->stack->_ready();
+				e\trace("LHTML Top-Level Render", '', $this->stack->children);
+				return $this->stack;
 			}
-			catch(RebuildWithNewStack $rebuild) {
-				$this->stack = $rebuild->stack;
+			catch(UseAlternateStack $use) {
+				e\trace_exception($use);
+				$this->stack = $use->stack;
 			}
 		}
+
+		return $this->stack;
 	}
 
 }
 
 /**
- * Rebuild with new stack exception
+ * Use alternate stack exception
  * @author Nate Ferrero
  */
-class RebuildWithNewStack extends Exception {
+class UseAlternateStack extends Exception {
 	public $stack;
 }
 

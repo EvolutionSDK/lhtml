@@ -154,34 +154,40 @@ class Parser {
 		'cdata-block' 		=> array(	'<' => 'tag-start'				)
 	);
 	
-	public static function parseString($string) {
+	public static function parseString($string, &$stack) {
 		
 		/**
 		 * Load lexer
 		 */
-		$lexer = e::$lexer;
-		$lexer->grammar(self::$grammar)->sourceString($string);
+		$lexer = e::$lexer->grammar(self::$grammar)->sourceString($string);
 		
 		/**
 		 * Parse lexer
 		 */
-		return self::parseLexer($lexer);
+		return self::parseLexer($lexer, $stack);
 	}
 
-	public static function parseFile($file) {
+	public static function parseFile($file, &$stack) {
+
 		/**
 		 * Load lexer
 		 */
-		$lexer = e::$lexer;
-		$lexer->grammar(self::$grammar)->sourceFile($file);
+		$lexer = e::$lexer->grammar(self::$grammar)->sourceFile($file);
 		
 		/**
 		 * Parse lexer
 		 */
-		return self::parseLexer($lexer);
+		return self::parseLexer($lexer, $stack);
 	}
 		
-	public static function parseLexer(&$lexer) {
+	public static function parseLexer(&$lexer, &$stack) {
+
+		/**
+		 * Ensure we are parsing into a node
+		 * @author Nate Ferrero
+		 */
+		if(!($stack instanceof Node))
+			throw new Exception("Stack is not an instance of Node");
 		
 		/**
 		 * Debug if set
@@ -203,15 +209,11 @@ class Parser {
 		$openTagsDepth = -1;
 		
 		/**
-		 * Create the root stack
-		 */
-		$stack = new Node('');
-		
-		/**
 		 * Add file to scope
 		 */
-		$stack->_data->__file__ = $lexer->getFile();
-		$openFile = $lexer->getFile();
+		if(!is_object($stack->_data))
+			$stack->_data = new Scope($stack);
+		$openFile = $stack->_data->__file__ = $lexer->getFile();
 		
 		/**
 		 * Source code positions
@@ -296,13 +298,6 @@ class Parser {
 					 */
 					unset($openTags[$openTagsDepth]);
 					$openTagsDepth--;
-
-					/**
-					 * Allow manipulation of tags after parsed
-					 * @author Nate Ferrero
-					 */
-					if(method_exists($stack, 'ready'))
-						$stack->ready();
 					
 					/**
 					 * Move up the stack

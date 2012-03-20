@@ -36,7 +36,7 @@ class Node {
 	 */
 	public static $complete_tags = array('br','hr','link','img');
 	
-	public function __construct($element, $parent = false) {
+	public function __construct($element = false, $parent = false) {
 		/**
 		 * Initialize the element and set the parent if one exists
 		 */
@@ -48,22 +48,30 @@ class Node {
 		 * Initialize a new Scope if one does not exist
 		 */
 		if(!is_object($this->_)) $this->_data = new Scope($this);
-		
-		/**
-		 * Run any initialization scripts for the custom tags
-		 */
-		try {
-			$this->init();
-		} catch(NotFoundException $e) {
-			throw $e;
-		} catch(Exception $e) {
-			$this->_error($e);
-		}
 	}
+
+	public function __describe() {
+		return $this->fake_element;
+	}
+
+	public $_ready = false;
 	
-	public function init() {}
-	
-	public function prebuild() {}
+	/**
+	 * Ready waterfall function
+	 * @author Nate Ferrero
+	 */
+	public final function _ready() {
+
+		if(!$this->_ready && method_exists($this, 'ready'))
+			$this->ready();
+
+		foreach($this->children as $child) {
+			if($child instanceof Node)
+				$child->_ready();
+		}
+
+		$this->_ready = true;
+	}
 	
 	public function _error($err = 'Error') {
 		throw $err;
@@ -315,11 +323,8 @@ class Node {
 	
 	public function build($pre = true) {
 
-		if($pre) {
+		if($pre)
 			$this->_init_scope();
-
-			$this->prebuild();
-		}
 
 		if(isset($_GET['--lhtml-stack']) && $_GET['--lhtml-stack'] == $this->fake_element)
 			dump($this);
@@ -489,6 +494,7 @@ class Node {
 	 * @author Kelly Becker
 	 */
 	public function source($as, $source) {
+		if($this->_data() instanceof \stdClass) dump($this->_data());
 		return $this->_data()->source($source, $as);
 	}
 	

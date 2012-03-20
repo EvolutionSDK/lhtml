@@ -44,7 +44,7 @@ use e;
 
 class SSL extends Node {
 	
-	public function init() {
+	public function ready() {
 		$this->element = false;
 		$dev = e::$environment->requireVar('Development.Master', 'yes | no');
 		if($dev == 'yes' || $dev === true) return;

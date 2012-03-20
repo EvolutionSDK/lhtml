@@ -6,12 +6,13 @@ use Exception;
 
 class _If extends Node {
 	
-	public function init() {
+	public function ready() {
 		$this->element = false;
 	}
 	
-	public function build() {
-		$this->_init_scope();
+	public function build($pre = true) {
+		if($pre)
+			$this->_init_scope();
 		$output = "";
 		
 		/**
@@ -326,8 +327,9 @@ class _Else extends Node {
 		}
 	}
 	
-	public function build() {
-		$this->_init_scope();
+	public function build($pre = true) {
+		if($pre)
+			$this->_init_scope();
 		$output = "";
 		
 		/**

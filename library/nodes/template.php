@@ -14,7 +14,7 @@ use e;
  */
 class Template extends Node {
 	
-	public function init() {
+	public function ready() {
 		$this->element = false;
 	}
 	
@@ -69,7 +69,7 @@ class Node_T extends Node {
 	
 	private static $templates = array();
 	
-	public function init() {
+	public function ready() {
 		if(empty(self::$templates))
 			self::$templates = e::$yaml->file(e::$portal->currentPortalDir().'/lhtml/--assets/mini-t.yaml');
 		

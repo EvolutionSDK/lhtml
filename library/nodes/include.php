@@ -6,24 +6,17 @@ use Bundles\LHTML\Node;
 use Exception;
 
 class _Include extends Node {
-	
-	public function init() {
+
+	public function ready() {
+		
 		$this->element = false;
-	}
-	
-	public function build() {
-		$this->process();
-		return parent::build();
-	}
-	
-	public function process() {
 		$data = $this->_data();
 		$dir = realpath(dirname($data->__file__));
 		$v = $this->attributes['file'];	
 		
 		$vars = $this->extract_vars($v);
 		if($vars) foreach($vars as $var) {
-			$data_response = $data->$var;	
+			$data_response = $data->$var;
 			$v = str_replace('{'.$var.'}', $data_response, $v);
 		}
 		
@@ -32,8 +25,11 @@ class _Include extends Node {
 		if(pathinfo($v, PATHINFO_EXTENSION) !== 'lhtml')
 			$v .= '.lhtml';
 
-		// Set the children to an array with one element
-		$this->children = array(Parser::parseFile($v));
+		/**
+		 * Parse the children into this element
+		 * @author Nate Ferrero
+		 */
+		e::$lhtml->file($v)->parse($this);
 	}
 	
 }

@@ -7,11 +7,8 @@ use e;
 
 class Select extends Node {
 	
-	public function init() {
+	public function ready() {
 		$this->element = 'select';
-	}
-	
-	public function prebuild() {
 
 		/**
 		 * @todo Fix local select types

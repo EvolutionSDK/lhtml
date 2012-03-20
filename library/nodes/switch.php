@@ -6,7 +6,7 @@ use Exception;
 
 class _Switch extends Node {
 	
-	public function init() {
+	public function ready() {
 		$this->element = false;
 	}
 	

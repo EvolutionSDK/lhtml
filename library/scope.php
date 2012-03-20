@@ -61,7 +61,7 @@ class Scope {
 		$url['last'] = end($url);
 		$url['first'] = reset($url);
 		$url['current'] = $_SERVER['REQUEST_URI'];
-		$url['referer'] = $_SERVER['HTTP_REFERER'];
+		$url['referer'] = isset($_SERVER['HTTP_REFERER']) ? $_SERVER['HTTP_REFERER'] : null;
 
 		/**
 		 * Bind URL hook
