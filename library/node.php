@@ -57,18 +57,23 @@ class Node {
 	public $_ready = false;
 	
 	/**
-	 * Ready waterfall function
+	 * Ready reverse waterfall function
+	 * By the time a node's ready function is called, ready has been called
+	 * for all of it's children, and preReady on all parents.
 	 * @author Nate Ferrero
 	 */
-	public final function _ready() {
+	public final function _ready($doSelf = true) {
 
-		if(!$this->_ready && method_exists($this, 'ready'))
-			$this->ready();
+		if($doSelf && !$this->_ready && method_exists($this, 'preReady'))
+			$this->preReady();
 
 		foreach($this->children as $child) {
 			if($child instanceof Node)
 				$child->_ready();
 		}
+
+		if($doSelf && !$this->_ready && method_exists($this, 'ready'))
+			$this->ready();
 
 		$this->_ready = true;
 	}

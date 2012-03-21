@@ -4,6 +4,7 @@ namespace Bundles\LHTML\Nodes;
 use Bundles\LHTML\Parser;
 use Bundles\LHTML\Node;
 use Exception;
+use e;
 
 class _Include extends Node {
 
