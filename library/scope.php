@@ -70,7 +70,7 @@ class Scope {
 		/**
 		 * Bind URL hook
 		 */
-		e::configure('lhtml')->activeAddKey('hook', ':url', &$url);
+		e::configure('lhtml')->activeAddKey('hook', ':url', array('--reference' => &$url));
 	}
 	
 	public function get($var_map) {
