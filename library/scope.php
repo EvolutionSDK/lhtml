@@ -24,7 +24,11 @@ class Scope {
 
 	public static function getHook($name) {
 		$hooks = e::configure('lhtml')->hook;
-		if(isset($hooks[$name])) return $hooks[$name];
+		if(isset($hooks[$name])) {
+			if(is_array($hooks[$name]) && isset($hooks[$name]['--reference']))
+				return $hooks[$name]['--reference'];
+			return $hooks[$name];
+		}
 		return false;
 	}
 
