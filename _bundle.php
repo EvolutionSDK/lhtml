@@ -173,6 +173,12 @@ class Bundle {
 			}
 
 			/**
+			 * Output the header
+			 * @author Nate Ferrero
+			 */
+			header("Content-Type: " . Instance::$contentType);
+
+			/**
 			 * HACK
 			 * Since double quotes aren't parsed correctly (and &doesnt; work in some cases)
 			 * @author Nate Ferrero
@@ -192,6 +198,7 @@ class Instance {
 	private $file = null;
 	private $string = null;
 	public $stack;
+	public static $contentType = 'text/html';
 
 	public function file($file) {
 		$this->file = $file;
@@ -207,6 +214,14 @@ class Instance {
 		if($this->stack)
 			unset($this->stack);
 		return $this;
+	}
+
+	/**
+	 * Override content type
+	 * @author Nate Ferrero
+	 */
+	public function setContentType($type) {
+		self::$contentType = $type;
 	}
 	
 	/**
