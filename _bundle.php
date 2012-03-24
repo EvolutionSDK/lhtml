@@ -248,19 +248,19 @@ class Instance {
 				 * Actually parse the file
 				 * @author Nate Ferrero
 				 */
-				$stack = Parser::parseFile($this->file, $parent);
+				$this->stack = Parser::parseFile($this->file, $parent);
 
 				/**
 				 * Store in cache
 				 * @author Nate Ferrero
 				 */
-				e::$cache->store('lhtml', $this->file, $stack);
+				e::$cache->store('lhtml', $this->file, $this->stack);
 			}
 
 			/**
 			 * Get the stack from the cache
 			 */
-			$this->stack = e::$cache->get('lhtml', $this->file);
+			if(empty($this->stack)) $this->stack = e::$cache->get('lhtml', $this->file);
 
 			unset($this->file);
 		}
