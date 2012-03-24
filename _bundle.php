@@ -260,7 +260,10 @@ class Instance {
 			/**
 			 * Get the stack from the cache
 			 */
-			if(empty($this->stack)) $this->stack = e::$cache->get('lhtml', $this->file);
+			if(empty($this->stack)) {
+				$this->stack = e::$cache->get('lhtml', $this->file);
+				$this->stack->appendTo($parent);
+			}
 
 			unset($this->file);
 		}
