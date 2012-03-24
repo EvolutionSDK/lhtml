@@ -99,7 +99,7 @@ class Scope {
 			 * Perform Filters
 			 */
 			if(is_array($filters)) foreach($filters as $filter) {
-				if(!is_array($filter)) $source = e::filters($filter, $source);
+				if(!is_array($filter)) $source = e::filters($this, $filter, $source);
 				else $source = e::filters($filter['func'], $source, $filter['args']);
 			}
 
@@ -294,8 +294,8 @@ class Scope {
 		 * Perform Filters
 		 */
 		if(is_array($filters)) foreach($filters as $filter) {
-			if(!is_array($filter)) $source = e::filters($filter, $source);
-			else $source = e::filters($filter['func'], $source, $filter['args']);
+			if(!is_array($filter)) $source = e::filters($this, $filter, $source);
+			else $source = e::filters($this, $filter['func'], $source, $filter['args']);
 		}
 		
 		$this->timers['scope->get'] += microtime(true) - $tt;
