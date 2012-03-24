@@ -62,8 +62,7 @@ class Node {
 	 * @author Nate Ferrero
 	 */
 	public final function _ready($doSelf = true) {
-
-		if(!$this->inLoop())
+		if(!$this->inLoop() && !$this->_ready)
 			$this->_init_scope();
 
 		if($doSelf && !$this->_ready && method_exists($this, 'ready'))
@@ -446,8 +445,7 @@ class Node {
 	}
 	
 	public function _init_scope($new = false) {
-		if($this->scope_initialized)
-			return;
+
 		$this->scope_initialized = true;
 		if(!$new) {
 			$var = false;
