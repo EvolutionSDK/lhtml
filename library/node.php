@@ -31,6 +31,11 @@ class Node {
 	 * Source code information
 	 */
 	public $_code;
+
+	/**
+	 * Unique ID
+	 */
+	public $_idx;
 	
 	/**
 	 * Tags that are complete
@@ -38,6 +43,9 @@ class Node {
 	public static $complete_tags = array('br','hr','link','img');
 	
 	public function __construct($element = false, $parent = false) {
+
+		$this->_idx = uniqid('node-', true);
+
 		/**
 		 * Initialize the element and set the parent if one exists
 		 */
@@ -687,4 +695,120 @@ class Node {
 		return "[$class$xtra]";
 	}
 	
+	public function __debugStack() {
+		echo <<<_
+<!doctype html>
+<html>
+	<head>
+		<title>Debug Stack</title>
+		<style>
+			body {
+				font-size: 11px;
+				font-family: Sans, Lucida Grande, Tahoma, Verdana, Helvetica, sans-serif;
+				color: #333;
+			}
+			h1 {
+				font-size: 14px;
+				margin-top: 0;
+			}
+			h1, p, pre {
+				margin-bottom: 0;
+			}
+			.key:after {
+				content: '=';
+			}
+			.func, 
+			.function 	{	color: darkblue;	}
+			.array 		{	color: orange;		}
+			.string 	{	color: green;		}
+			.boolean 	{	color: orange;		}
+			.number 	{	color: red;			}
+			.object 	{	color: darkred;		}
+			.class 		{	color: darkred;		}
+			.line 		{	color: purple;		}
+			.invisibles {
+				color: gray; padding: 0 2px;
+			}
+			.node {
+				float: left;
+				position: relative;
+				border: 1px solid #888;
+				margin: 10px 0 10px 10px;
+				padding-right: 10px;
+				box-shadow: inset 0 0 2px #444;
+			}
+			.node .lbox {
+				margin: 0 auto;
+				width: 200px;
+			}
+			.node label {
+				position: relative;
+				margin: 0 auto;
+				top: -1px;
+				display: block;
+				width: 194px;
+				background: #ffe;
+				border: 1px solid #cc8;
+				text-align: center;
+				overflow: hidden;
+				padding: 8px;
+				left: -1px;
+				margin-bottom: -2px;
+				box-shadow: 0 1px 2px #444;
+			}
+			.node.duplicate label {
+				background: #fee;
+				border: 1px solid #c88;
+			}
+			.text {
+				background: #eee;
+				border: 1px solid #ccc;
+				text-align: center;
+				padding: 8px;
+				width: 200px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+_;
+
+		echo $this->__debugNode();
+
+		echo '
+	</body>
+</html>';
+
+		exit;
+	}
+
+	public function __debugChildren() {
+		$cs = array();
+		foreach($this->children as $child) {
+			if(is_string($child) && strlen(trim($child) == 0)) continue;
+			$cs[] = (
+				$child instanceof Node ? $child->__debugNode() : '<pre class="text">' . trim($child) . '</pre>'
+			);
+		}
+
+		return implode('', $cs);
+	}
+
+	private $__nodeList = array();
+
+	public function __debugNode() {
+		static $nodeList = array();
+		if(!$this->_idx)
+			$this->_idx = uniqid('xnode-', true);
+		if(isset($this->__nodeList[$this->_idx]))
+			$class = 'duplicate';
+		else
+			$class = '';
+		$this->__nodeList[$this->_idx] = true;
+		$attrs = array();
+		foreach(e\stylize_array($this->attributes) as $item)
+			$attrs[] = '<pre>' . $item . '</pre>';
+		return '<div class="node '.$class.'"><div class="lbox"><label><h1>&lt;'.$this->fake_element.'&gt;</h1>'.
+			implode('', $attrs) . '</label></div>'. $this->__debugChildren() . '</div>';
+	}
 }

@@ -76,12 +76,14 @@ class Scope {
 	public function get($var_map, $depth = 0) {
 
 
-		if($depth > 10) {
+		if($depth > 20) {
 			if(is_array($var_map))
 				$var_map = e\stylize_array($var_map);
 			if(is_object($var_map))
 				$var_map = '[Object ' . get_class($var_map) . ']';
-			throw new Exception("Source recursion while looking for `$var_map`");
+			if(isset($_GET['--scope-debug-recursion']))
+				$this->owner->__debugStack();
+			throw new Exception("Source recursion while looking for `$var_map` <a href='?--scope-debug-recursion'>Debug</a>");
 		}
 
 
