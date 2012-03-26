@@ -267,8 +267,8 @@ class Instance {
 				$uncache = e::$cache->get('lhtml', $this->file);
 				if(!($uncache instanceof Node))
 					throw new Exception("Cached LHTML stack is not a Node");
-				$uncache->appendTo($parent);
-				$this->stack = $parent;
+				//$uncache->appendTo($parent);
+				$this->stack = $uncache;
 			}
 
 			unset($this->file);
