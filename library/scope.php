@@ -76,7 +76,7 @@ class Scope {
 	public function get($var_map, $depth = 0) {
 
 
-		if($depth > 3) {
+		if($depth > 10) {
 			if(is_array($var_map))
 				$var_map = e\stylize_array($var_map);
 			if(is_object($var_map))
