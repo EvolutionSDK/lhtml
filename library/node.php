@@ -736,6 +736,10 @@ class Node {
 				margin: 10px 0 10px 10px;
 				padding-right: 10px;
 				box-shadow: inset 0 0 2px #444;
+				background: #fff;
+			}
+			.node:hover {
+				background: #ace;
 			}
 			.node .lbox {
 				margin: 0 auto;
