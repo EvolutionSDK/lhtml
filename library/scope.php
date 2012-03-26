@@ -73,7 +73,18 @@ class Scope {
 		e::configure('lhtml')->activeAddKey('hook', ':url', array('--reference' => &$url));
 	}
 	
-	public function get($var_map) {
+	public function get($var_map, $depth = 0) {
+
+
+		if($depth > 3) {
+			if(is_array($var_map))
+				$var_map = e\stylize_array($var_map);
+			if(is_object($var_map))
+				$var_map = '[Object ' . get_class($var_map) . ']';
+			throw new Exception("Source recursion while looking for `$var_map`");
+		}
+
+
 		$source = false;
 		$tt = microtime(true);
 		$deferred = false;
@@ -87,7 +98,7 @@ class Scope {
 		// strip special char for embedded JS vars
 		if(is_string($var_map) AND strpos($var_map, '%') === 0) $var_map = substr($var_map, 1);
 		
-		$allmap = is_string($var_map) ? $this->parse($var_map) : $var_map;
+		$allmap = is_string($var_map) ? $this->parse($var_map, $depth + 1) : $var_map;
 		$filters = $allmap['filters'];
 		$map = $allmap['vars'];
 
@@ -224,7 +235,7 @@ class Scope {
 					if(is_object($parent)) {
 						$data = $parent->_data();
 						if($data instanceof Scope)
-							return $data->get($var_map);
+							return $data->get($var_map, $depth + 1);
 					}
 				}
 			}
@@ -303,13 +314,13 @@ class Scope {
 		return $source;
 	}
 	
-	public function parse($var) {
+	public function parse($var, $depth = 0) {
 		$tt = microtime(true);
 		$original = $var;
 		
 		$extract_vars = $this->extract_vars($var);
 		if(!empty($extract_vars)) foreach($extract_vars as $rv) {
-			$val = (string) $this->get($rv);
+			$val = (string) $this->get($rv, $depth);
 			$var = str_replace('{'.$rv.'}', $val, $var);
 		}
 		
@@ -318,7 +329,7 @@ class Scope {
 		if(!empty($extract_subvars)) {
 			$subvars = true;
 			foreach($extract_subvars as $rv) {
-				$val = (string) $this->get($rv);
+				$val = (string) $this->get($rv, $depth);
 				$var = str_replace('['.$rv.']', $val, $var);
 			}
 		}
@@ -330,7 +341,7 @@ class Scope {
 		 * @todo Implement this properly
 		 *
 		if($subvars && !empty($val)) {
-			$replace = $this->get($var);
+			$replace = $this->get($var, $depth);
 			/*if(!is_string($replace))
 				$replace = e\json_encode_safe($replace);*//*
 			if(is_string($replace)) {
@@ -363,8 +374,8 @@ class Scope {
 			}
 			else if(strpos($cond, ' == ') !== false) {
 				list($cond, $compare) = explode(' == ', $cond);
-				$val = $this->get($cond);
-				$cval = $this->get($compare);
+				$val = $this->get($cond, $depth);
+				$cval = $this->get($compare, $depth);
 				
 				/**
 				 * Make sure the values are not empty
@@ -375,16 +386,16 @@ class Scope {
 			}
 			else if(strpos($cond, ' != ') !== false) {
 				list($cond, $compare) = explode(' != ', $cond);
-				$val = $this->get($cond);
-				$cval = $this->get($cond);
+				$val = $this->get($cond, $depth);
+				$cval = $this->get($cond, $depth);
 				
 				if($val != $cval) $var = $result;
 				else $var = $else;
 			}
 			else if(strpos($cond, ' () ') !== false) {
 				list($cond, $compare) = explode(' () ', $cond);
-				$val = $this->get($cond);
-				$cval = explode(',', $this->get($compare));
+				$val = $this->get($cond, $depth);
+				$cval = explode(',', $this->get($compare, $depth));
 				$retval = false;
 				foreach($cval as $tmp) if($val == trim($tmp)) $retval = true;
 				if($retval) $var = $result;
@@ -392,15 +403,15 @@ class Scope {
 			}
 			else if(strpos($cond, ' () ') !== false) {
 				list($cond, $compare) = explode(' () ', $cond);
-				$val = $this->get($cond);
-				$cval = explode(',', $this->get($compare));
+				$val = $this->get($cond, $depth);
+				$cval = explode(',', $this->get($compare, $depth));
 				$retval = true;
 				foreach($cval as $tmp) if($val == trim($tmp)) $retval = false;
 				if($retval) $var = $result;
 				else $var = $else;
 			}
 			else {
-				$val = $this->get($cond);
+				$val = $this->get($cond, $depth);
 				$val = is_string($val) ? trim($val) : $val;
 				if($val) $var = $result;
 				else $var = $else;
