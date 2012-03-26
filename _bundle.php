@@ -234,6 +234,9 @@ class Instance {
 
 		if(is_null($parent))
 			$parent = new Node;
+
+		if(!($parent instanceof Node))
+			throw new Exception("Parent is not a Node");
 		
 		if(!is_null($this->file)) {
 
@@ -262,6 +265,8 @@ class Instance {
 			 */
 			if(empty($this->stack)) {
 				$this->stack = e::$cache->get('lhtml', $this->file);
+				if(!($this->stack instanceof Node))
+					throw new Exception("Cached LHTML stack is not a Node");
 				$this->stack->appendTo($parent);
 			}
 
