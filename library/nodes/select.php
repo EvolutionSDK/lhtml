@@ -20,7 +20,7 @@ class Select extends Node {
 		 */
 		$atype = isset($this->attributes['type']) ? $this->attributes['type'] : '';
 		$aopts = isset($this->attributes['opts']) ? $this->attributes['opts'] : '';
-		unset($this->attributes['type'], $this->attributes['range']);
+		unset($this->attributes['type'], $this->attributes['opts']);
 		if(strlen($atype) < 1) unset($atype, $aopts);
 
 		/**
