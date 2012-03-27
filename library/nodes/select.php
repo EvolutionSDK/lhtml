@@ -57,6 +57,12 @@ class Select extends Node {
 				if(!is_string($tmp)) throw new Exception("Select event must return a string.");
 				else $output .= $tmp;
 			} 
+
+			/**
+			 * If there was output append to the children
+			 */
+			if(isset($output))
+				e::$lhtml->string($output)->parse($this);
 		}
 
 	}
