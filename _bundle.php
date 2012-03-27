@@ -228,7 +228,7 @@ class Instance {
 	 * Parse the loaded file
 	 * @author Nate Ferrero
 	 */
-	public function parse($parent = null, $topLevel = false) {
+	public function parse($rparent = null, $topLevel = false) {
 		if(is_null($this->file) && is_null($this->string))
 			throw new Exception("LHTML: No file or string specified to parse");
 
@@ -264,10 +264,11 @@ class Instance {
 			 * Get the stack from the cache
 			 */
 			if(empty($this->stack)) {
-				$this->stack = e::$cache->get('lhtml', $this->file);
-				if(!($this->stack instanceof Node))
+				$uncache = e::$cache->get('lhtml', $this->file);
+				if(!($uncache instanceof Node))
 					throw new Exception("Cached LHTML stack is not a Node");
-				$this->stack->appendTo($parent);
+				//$uncache->appendTo($parent);
+				$this->stack = $uncache;
 			}
 
 			unset($this->file);
@@ -286,7 +287,13 @@ class Instance {
 		 * Handle stack ready
 		 * @author Nate Ferrero
 		 */
+		$stack = $this->stack;
+		if($rparent instanceof Node) {
+			$stack->appendTo($rparent);
+			$stack = $rparent;
+		}
 
+		$this->stack = $stack;
 		/**
 		 * This creates a loop that either returns or readies the new stack, as needed
 		 * @author Nate Ferrero
