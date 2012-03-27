@@ -191,6 +191,17 @@ class Bundle {
 			e\Complete();
 		}
 	}
+
+	/**
+	 * Clean up te LHTML cache
+	 * @author Nate Ferrero
+	 */
+	public function _on_e_command_update($dir) {
+		$dir .= '/lhtml';
+		foreach(glob("$dir/*") as $file)
+			if(!unlink($file)) return "Error: Unable to clear LHTML cache";
+		return "LHTML cache cleared";
+	} 
 }
 
 class Instance {
