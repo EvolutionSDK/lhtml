@@ -35,6 +35,11 @@ class _If extends Node {
 		 */
 		if($this->process()) {
 			if(!empty($this->children)) foreach($this->children as $child) {
+				/**
+				 * Skip else if true
+				 */
+				if($child instanceof Node && $child->fake_element == ':else')
+					continue;
 				if(is_object($child)) $output .= $child->build();
 				else if(is_string($child)) $output .= $this->_string_parse($child);
 			}
