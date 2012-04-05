@@ -158,7 +158,7 @@ class Bundle {
 			 * Output the header
 			 * @author Nate Ferrero
 			 */
-			header("Content-Type: " . Instance::$contentType);
+			header('Content-Type: ' . Instance::$contentType . '; charset=utf-8');
 
 			/**
 			 * HACK
@@ -166,7 +166,7 @@ class Bundle {
 			 * @author Nate Ferrero
 			 * @todo Find a better solution for this!
 			 */
-			$out = str_replace(array("-#-"), array('&quot;'), $out);
+			$out = str_replace(array('-#-'), array('&quot;'), $out);
 			echo $out;
 
 			// Complete the page load
