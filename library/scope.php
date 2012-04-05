@@ -73,28 +73,49 @@ class Scope {
 		e::configure('lhtml')->activeAddKey('hook', ':url', array('--reference' => &$url));
 	}
 	
-	public function get($var_map, $depth = 0) {
+	public function get($var_map, $depth = 0, $ztrace = false, $zsteps = array()) {
 
+		/**
+		 * Add a condition to trace a source variable
+		 * @author Nate Ferrero
+		 */
+		if(isset($_GET['--lhtml-scope']) && strpos($var_map, $_GET['--lhtml-scope']) !== false)
+			$ztrace = true;
 
 		if($depth > 100) {
 			if(is_array($var_map))
 				$var_map = e\stylize_array($var_map);
 			if(is_object($var_map))
 				$var_map = '[Object ' . get_class($var_map) . ']';
+
+			/**
+			 * Trace!
+			 * @author Nate Ferrero
+			 */
+			if($ztrace) {
+				$zsteps[] = 'Too much recursion looking for variable `' . $var_map . '`';
+				dump($zsteps);
+			}
+
 			if(isset($_GET['--scope-debug-recursion']))
 				$this->owner->__debugStack();
 			throw new Exception("Source recursion while looking for `$var_map` <a href='?--scope-debug-recursion'>Debug</a>");
 		}
 
-
 		$source = false;
 		$tt = microtime(true);
 		$deferred = false;
+
+		if($ztrace)
+			$zsteps[] = array('var' => $var_map);
 
 		// Check for deferred sources
 		if(isset($this->deferred_sources[$var_map])) {
 			$var_map = $this->deferred_sources[$var_map];
 			$deferred = true;
+
+			if($ztrace)
+				$zsteps[] = array('var' => $var_map, 'deferred' => true);
 		}
 		
 		// strip special char for embedded JS vars
@@ -115,6 +136,9 @@ class Scope {
 				if(!is_array($filter)) $source = e::filters($this, $filter, $source);
 				else $source = e::filters($filter['func'], $source, $filter['args']);
 			}
+
+			if($ztrace)
+				$zsteps[] = array('var' => $var_map, 'source' => $source, 'deferred' => true);
 
 			return $source;
 		}
@@ -139,6 +163,9 @@ class Scope {
 			if(is_callable($hook)) {
 				$source = call_user_func_array($hook, $map[0]['args']);
 				$flag_first=1;
+
+				if($ztrace)
+					$zsteps[] = array('hook function' => $hook, 'args' => $map[0]['args']);
 			}
 			else {
 				$func = $map[0]['func'];
@@ -152,10 +179,18 @@ class Scope {
 			$hook = self::getHook($map[0]);
 
 			if(is_callable($hook)) {
+
+				if($ztrace)
+					$zsteps[] = array('hook function' => $hook);
+
 				$source = $hook();
 				$flag_first=1;
 			}
 			else {
+
+				if($ztrace)
+					$zsteps[] = array('hook value' => $hook);
+
 				$source = $hook;
 				$flag_first=1;
 			}
@@ -164,20 +199,44 @@ class Scope {
 		
 		if(!$flag_first) {
 
+			if($ztrace)
+				$zsteps[] = array('flag_first' => $flag_first);
+
 			/**
 			 * Check if traversable
 			 */
 			$traversable = isset($this->source_data[$map[0]]) && $this->source_data[$map[0]] instanceof \Traversable;
 
+			if($ztrace)
+				$zsteps[] = array('traversable' => $traversable);
+
 			/**
 			 * Return literal string
 			 */
-			if(is_string($map[0]) && strpos($map[0],"'") === 0) return trim($map[0],"'");
+			if(is_string($map[0]) && strpos($map[0],"'") === 0) {
+				$source = trim($map[0],"'");
+
+				if($ztrace) {
+					$zsteps[] = array('literal string' => $source);
+					dump($zsteps);
+				}
+
+				return $source;
+			}
 
 			/**
 			 * Return literal number
 			 */
-			else if(is_string($map[0]) && is_numeric($map[0])) return $map[0];
+			else if(is_string($map[0]) && is_numeric($map[0])) {
+				$source = $map[0];
+
+				if($ztrace) {
+					$zsteps[] = array('number' => $source);
+					dump($zsteps);
+				}
+
+				return $source;
+			}
 			
 			/**
 			 * Pass on traversable object (i.e. allow loopable source when not in a loop)
@@ -185,6 +244,7 @@ class Scope {
 			 */
 			else if($this->source_pointer === false && is_string($map[0]) && $traversable) {
 				$source = $this->source_data[$map[0]];
+
 				$flag_first = 1;
 			}
 
@@ -192,7 +252,8 @@ class Scope {
 			 * Return Traversable Object
 			 */
 			else if($this->source_pointer !== false && is_string($map[0]) && $traversable) {
-				$i=0; foreach($this->source_data[$map[0]] as $source) {
+				$i=0;
+				foreach($this->source_data[$map[0]] as $source) {
 					if($i === $this->source_pointer) break;
 					unset($source);
 					$i++;
@@ -237,7 +298,7 @@ class Scope {
 					if(is_object($parent)) {
 						$data = $parent->_data();
 						if($data instanceof Scope)
-							return $data->get($var_map, $depth + 1);
+							return $data->get($var_map, $depth + 1, $ztrace, $zsteps);
 					}
 				}
 			}
@@ -245,13 +306,28 @@ class Scope {
 		}
 		foreach($map as $i=>$var) {
 
+			if($ztrace)
+				$zsteps[] = array('source' => $source, 'processing #' . $i => $var);
+
 			if($source instanceof Closure)
 				$source = $source();
 
 			if($map[0] == ':get' && $map[1] == 'test') echo(' | i:'.$i.' | flag: '.$flag_first);
-			if($flag_first && $i < $flag_first) continue;
-			if(!isset($source) || (!$source && !is_array($source))) break;
-			
+			if($flag_first && $i < $flag_first) {
+
+				if($ztrace)
+					$zsteps[] = array('continuing because:' => " \$i < \$flag_first ($i < $flag_first) ");
+
+				continue;
+			}
+			if(!isset($source) || (!$source && !is_array($source))) {
+
+				if($ztrace)
+					$zsteps[] = array('breaking because:' => "source is empty", 'source' => $source);
+
+				break;
+			}
+
 			if(is_array($var) && is_object($source)) {
 				/**
 				 * Allow catching of exceptions by prepending @ to a method
@@ -262,6 +338,10 @@ class Scope {
 					$throw = false;
 					$var['func'] = substr($var['func'], 1);
 				}
+
+				if($ztrace)
+					$zsteps[] = array('function' => $var['func'], 'arguments' => $var['args'], 'throw any exceptions' => $throw);
+
 				try {
 					if(method_exists($source, $var['func'])) $source = call_user_func_array(array($source, $var['func']), $var['args']);
 					else if(method_exists($source, '__call')) $source = call_user_func_array(array($source, $var['func']), $var['args']);
@@ -274,6 +354,14 @@ class Scope {
  			}
 
 			else if(is_object($source)) {
+
+				if($ztrace)
+					$zsteps[] = array(
+						'var' => $var,
+						'var isset' => isset($source->$var),
+						'method exists' => method_exists($source, $var),
+						'__call exists' => method_exists($source, '__call')
+					);
 
 				try {
 					if(isset($source->$var)) $source = $source->$var;
@@ -290,29 +378,53 @@ class Scope {
 			}
 			
 			else if(is_array($source)) {
-				if($this->source_pointer !== false && $map[0] == $this->source_as && !$iterated) {
+				if(!$flag_first && $this->source_pointer !== false && $map[0] == $this->source_as && !$iterated) {
 					$iterated = true;
+
+					if($ztrace)
+						$zsteps[] = array('next iteration of' => $map[0], 'current index' => $map[1]);
+
 					$source = $source[$map[1]];
 				}
-				else if(isset($source[$var]))
+				else if(isset($source[$var])) {
+
+					if($ztrace)
+						$zsteps[] = array('array index' => $var);
+
 					$source = $source[$var];
-				else {
+				} else {
 					$source = false;
 				}
 			}
 			else $source = false;
 		}
+
+		if($ztrace)
+			$zsteps[] = array('source' => $source);
 		
 		/**
 		 * Perform Filters
 		 */
 		if(is_array($filters)) foreach($filters as $filter) {
-			if(!is_array($filter)) $source = e::filters($this, $filter, $source);
-			else $source = e::filters($this, $filter['func'], $source, $filter['args']);
+			if(!is_array($filter)) {
+				$source = e::filters($this, $filter, $source);
+
+				if($ztrace)
+					$zsteps[] = array('filter' => $filter, 'source' => $source);
+			}
+			else {
+				$source = e::filters($this, $filter['func'], $source, $filter['args']);
+
+				if($ztrace)
+					$zsteps[] = array('filter' => $filter['func'], 'arguments' => $filter['args'], 'source' => $source);
+			}
 		}
 		
 		$this->timers['scope->get'] += microtime(true) - $tt;
 		
+		if($ztrace)
+			dump($zsteps);
+
 		return $source;
 	}
 	
