@@ -153,34 +153,34 @@ class Parser {
 		# cdata
 		'cdata-block' 		=> array(	'<' => 'tag-start'				)
 	);
-	
-	public static function parseString($string, &$stack) {
+
+	public static function parseString($string, $description, &$stack) {
 		
 		/**
 		 * Load lexer
 		 */
-		$lexer = e::$lexer->grammar(self::$grammar)->sourceString($string);
+		$lexer = e::$lexer->grammar(self::$grammar)->description($description)->sourceString($string);
 		
 		/**
 		 * Parse lexer
 		 */
-		return self::parseLexer($lexer, $stack);
+		return self::parseLexer($lexer, $description, $stack);
 	}
 
-	public static function parseFile($file, &$stack) {
+	public static function parseFile($file, $description, &$stack) {
 
 		/**
 		 * Load lexer
 		 */
-		$lexer = e::$lexer->grammar(self::$grammar)->sourceFile($file);
+		$lexer = e::$lexer->grammar(self::$grammar)->description($description)->sourceFile($file);
 		
 		/**
 		 * Parse lexer
 		 */
-		return self::parseLexer($lexer, $stack);
+		return self::parseLexer($lexer, $description, $stack);
 	}
 		
-	public static function parseLexer(&$lexer, &$stack) {
+	public static function parseLexer(&$lexer, $description, &$stack) {
 
 		/**
 		 * Ensure we are parsing into a node
@@ -291,7 +291,7 @@ class Parser {
 					if($long && $oname !== $token->value)
 						throw new Exception("LHTML Parse Error: Found closing tag `&lt;/$token->value&gt;`
 						when `&lt;$oname&gt;`still needs to be closed
-						on line $token->line at character $token->col");
+						on line $token->line at character $token->col in $description");
 					
 					/**
 					 * Close the tag

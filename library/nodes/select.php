@@ -62,7 +62,7 @@ class Select extends Node {
 			 * If there was output append to the children
 			 */
 			if(isset($output))
-				e::$lhtml->string($output)->parse($this);
+				e::$lhtml->string($output, "Select Tag")->parse($this);
 		}
 
 	}

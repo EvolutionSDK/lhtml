@@ -208,20 +208,23 @@ class Instance {
 	
 	private $file = null;
 	private $string = null;
+	private $description = '{unknown}';
 	public $stack;
 	public static $contentType = 'text/html';
 
 	public function file($file) {
 		$this->file = $file;
 		$this->string = null;
+		$this->description = $file;
 		if($this->stack)
 			unset($this->stack);
 		return $this;
 	}
 	
-	public function string($string, $timestamp = null) {
+	public function string($string, $description = '{string}', $timestamp = null) {
 		$this->string = $string;
 		$this->file = null;
+		$this->description = $description;
 		if($this->stack)
 			unset($this->stack);
 		return $this;
@@ -262,7 +265,7 @@ class Instance {
 				 * Actually parse the file
 				 * @author Nate Ferrero
 				 */
-				$this->stack = Parser::parseFile($this->file, $parent);
+				$this->stack = Parser::parseFile($this->file, $this->description, $parent);
 
 				/**
 				 * Store in cache
@@ -290,7 +293,7 @@ class Instance {
 			 * Todo: add caching for strings
 			 * @author Nate Ferrero
 			 */
-			$this->stack = Parser::parseString($this->string, $parent);
+			$this->stack = Parser::parseString($this->string, $this->description, $parent);
 			unset($this->string);
 		}
 
