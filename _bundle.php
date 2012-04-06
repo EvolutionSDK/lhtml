@@ -67,9 +67,9 @@ class Bundle {
 		$this->route($path, array($dir));
 	}
 	
-	public function _on_router_route($path) {
-		$this->route($path, array(e\site));
-	}
+	//public function _on_router_route($path) {
+	//	$this->route($path, array(e\site));
+	//}
 
 	public function _on_portal_exception($path, $dir, $exception) {
 		$this->exception($path, array($dir), $exception);
