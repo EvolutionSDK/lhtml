@@ -57,7 +57,7 @@ class Scope {
 		/**
 		 * Prepare URL Hook
 		 */
-		$url = explode('/', $_SERVER['REQUEST_URI']);
+		$url = explode('/', $_SERVER['REDIRECT_URL']);
 		$url = array_filter($url, function($val) {
 			if(strlen($val) > 0 || is_array($val) || is_object($val))
 				return true;
