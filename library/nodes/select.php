@@ -52,7 +52,7 @@ class Select extends Node {
 			 * If it cant find a local select handler inside our tag then call an event
 			 */
 			else {
-				$tmp = e::$events->{'lhtmlNodeSelect'.ucwords(strtolower($atype))}($aopts, $selected);
+				$tmp = e::$events->{'lhtmlNodeSelect'.ucwords(strtolower($atype))}($aopts, $this->attributes['selected']);
 				$tmp = count($tmp) < 1 ? '' : array_shift($tmp);
 				if(!is_string($tmp)) throw new Exception("Select event must return a string.");
 				else $output .= $tmp;
