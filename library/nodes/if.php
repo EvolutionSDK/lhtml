@@ -307,6 +307,25 @@ class _If extends Node {
 			else $retval = false;
 			
 		}
+
+		if(isset($this->attributes['time_between'])) {
+		
+			$time = $this->attributes['time_between'];
+			$time = explode(' & ', $time);
+			$time1 = strtotime(array_shift($time));
+			$time2 = strtotime(array_pop($time));
+
+			$df = isset($this->attributes['df']) ? $this->attributes['df'] : 'Y-m-d H:i:s';
+			$of = (float) (isset($this->attributes['offset']) ? $this->attributes['offset'] : 0);
+			
+			$of = $of * 3600;
+
+			$time3 = strtotime(date($df, time() - $of));
+
+			if($time1 < $time3 && $time2 > $time3) $retval = true;
+			else $retval = false;
+			
+		}
 		
 		if(isset($retval) && !$retval) foreach($this->children as $child) {
 			if(isset($child->fake_element) && $child->fake_element == ':else') $child->show_else = 1;
