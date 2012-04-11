@@ -515,6 +515,11 @@ class Node {
 	 * @author Kelly Becker
 	 */
 	public function source($as, $source) {
+		$this->scope_initialized = true;
+
+		if(!isset($this->_data))
+			$this->_data = new Scope($this);
+
 		if($this->_data() instanceof \stdClass) dump($this->_data());
 		return $this->_data()->source($source, $as);
 	}
