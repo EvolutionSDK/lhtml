@@ -137,8 +137,10 @@ class Scope {
 				else $source = e::filters($filter['func'], $source, $filter['args']);
 			}
 
-			if($ztrace)
+			if($ztrace) {
 				$zsteps[] = array('var' => $var_map, 'source' => $source, 'deferred' => true);
+				dump($zsteps);
+			}
 
 			return $source;
 		}
@@ -211,31 +213,29 @@ class Scope {
 				$zsteps[] = array('traversable' => $traversable);
 
 			/**
-			 * Return literal string
+			 * Literal string
 			 */
 			if(is_string($map[0]) && strpos($map[0],"'") === 0) {
 				$source = trim($map[0],"'");
 
 				if($ztrace) {
 					$zsteps[] = array('literal string' => $source);
-					dump($zsteps);
 				}
 
-				return $source;
+				$flag_first = 1;
 			}
 
 			/**
-			 * Return literal number
+			 * Literal number
 			 */
 			else if(is_string($map[0]) && is_numeric($map[0])) {
 				$source = $map[0];
 
 				if($ztrace) {
 					$zsteps[] = array('number' => $source);
-					dump($zsteps);
 				}
 
-				return $source;
+				$flag_first = 1;
 			}
 			
 			/**
@@ -249,7 +249,7 @@ class Scope {
 			}
 
 			/**
-			 * Return Traversable Object
+			 * Traversable Object
 			 */
 			else if($this->source_pointer !== false && is_string($map[0]) && $traversable) {
 				$i=0;
@@ -263,7 +263,7 @@ class Scope {
 			}
 			
 			/**
-			 * Return Array
+			 * Array
 			 */
 			else if($this->source_pointer !== false && is_string($map[0]) && isset($this->source_data[$map[0]]) && is_array($this->source_data[$map[0]])) {
 				$i=0; foreach($this->source_data[$map[0]] as $source) {
@@ -276,7 +276,7 @@ class Scope {
 			}
 			
 			/**
-			 * Return Object
+			 * Object
 			 */
 			else if(is_string($map[0]) && isset($this->source_data[$map[0]]) && !($this->source_data[$map[0]] instanceof \Traversable)) {
 				$tmp = $this->source_data[$map[0]];
@@ -304,6 +304,10 @@ class Scope {
 			}
 			//else throw new \Exception("IXML Scope no function was called when calling {$var_map}");
 		}
+
+		if($ztrace)
+			$zsteps[] = array("map" => $map);
+
 		foreach($map as $i=>$var) {
 
 			if($ztrace)
@@ -400,7 +404,7 @@ class Scope {
 		}
 
 		if($ztrace)
-			$zsteps[] = array('source' => $source);
+			$zsteps[] = array('source' => $source, 'filters' => $filters);
 		
 		/**
 		 * Perform Filters
