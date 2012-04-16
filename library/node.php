@@ -388,9 +388,10 @@ class Node {
 		}
 		
 		/**
-		 * If is a real element create the opening tag
+		 * If is a real element create the opening tag - output when self looping or on first loop iteration
 		 */
-		else if($this->element !== '' && $this->element) $output .= "<$this->element".$this->_attributes_parse().'>';
+		else if($this->element !== '' && $this->element && ($this->loop_type !== 'contents' || $loop === 1))
+			$output .= "<$this->element".$this->_attributes_parse().'>';
 		
 		/**
 		 * Loop thru the children and populate this tag
@@ -415,20 +416,25 @@ class Node {
 		}
 		
 		/**
-		 * Close the tag
-		 */
-		if($this->element !== '' && $this->element) $output .= "</$this->element>";
-		
-		/**
 		 * If a loop increment the pointer
 		 */
 		if($this->is_loop) $this->_data()->next();
+
+		/**
+		 * Close the tag - output when self looping or on last loop iteration
+		 */
+		if($this->element !== '' && $this->element && ($this->loop_type !== 'contents' || !$this->_data()->iteratable()))
+			$output .= "</$this->element>";
 		
 		/**
 		 * End build loop
 		 */
 		}
 
+		/**
+		 * Show empty content if loop did not iterate
+		 * @author Kelly Becker
+		 */
 		if($loop === 0) foreach($this->children as $node)
 			if($node->fake_element == ':empty') return $node->build(true);
 		
