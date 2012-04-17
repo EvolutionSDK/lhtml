@@ -14,6 +14,7 @@ class _Include extends Node {
 		$data = $this->_data();
 		$dir = realpath(dirname($data->__file__));
 		$v = $this->attributes['file'];	
+		unset($this->attributes['file']);
 		
 		$vars = $this->extract_vars($v);
 		if($vars) foreach($vars as $var) {
