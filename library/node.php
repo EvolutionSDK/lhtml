@@ -348,6 +348,7 @@ class Node {
 		 */
 		if($this->is_loop) {
 			$this->_data()->reset();
+			e\trace_enter('LHTML Iteration Loop',$this->attributes[':load'], array(), 7);
 		} else {
 			$once = 1;
 		}
@@ -432,7 +433,10 @@ class Node {
 		if($loop === 0) foreach($this->children as $node)
 			if($node->fake_element == ':empty') return $node->build(true);
 		
-		if($this->is_loop) $this->_data()->reset();
+		if($this->is_loop) {
+			e\trace_exit();
+			$this->_data()->reset();
+		}
 		
 		/**
 		 * Return the rendered page
