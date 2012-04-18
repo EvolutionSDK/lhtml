@@ -64,6 +64,8 @@ class Node {
 		return $this->fake_element;
 	}
 
+	public function scope_ready() {}
+
 	public $_ready = false;
 	
 	/**
@@ -515,8 +517,7 @@ class Node {
 		/**
 		 * Ready Scope
 		 */
-		if(method_exists($this, 'scope_ready'))
-			$this->scope_ready();
+		$this->scope_ready();
 	}
 
 	public function inLoop() {
