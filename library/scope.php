@@ -252,13 +252,26 @@ class Scope {
 			 * Traversable Object
 			 */
 			else if($this->source_pointer !== false && is_string($map[0]) && $traversable) {
-				$i=0;
-				foreach($this->source_data[$map[0]] as $source) {
-					if($i === $this->source_pointer) break;
-					unset($source);
-					$i++;
+
+				$tr_obj = $this->source_data[$map[0]];
+
+				# artificially boost the pointer without having to iterate through each item again.
+				if(isset($tr_obj->position) ) {
+					if($this->source_pointer < count($tr_obj)) {
+						$source = $tr_obj->current();
+						$tr_obj->position = $this->source_pointer;
+					}
+					else unset($source);
 				}
-				
+				else {
+					$i=0;
+					foreach($tr_obj as $source) {
+						if($i === $this->source_pointer) break;
+						$i++;
+						unset($source);
+					}
+
+				}
 				if(isset($source)) $flag_first = 1;
 			}
 			
