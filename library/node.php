@@ -359,8 +359,7 @@ class Node {
 		/**
 		 * Prebuild
 		 */
-		if(method_exists($this, 'prebuild'))
-			$this->prebuild();
+		$this->prebuild();
 
 		/**
 		 * Start counting loops
