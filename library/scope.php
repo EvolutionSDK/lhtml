@@ -257,6 +257,7 @@ class Scope {
 
 				# artificially boost the pointer without having to iterate through each item again.
 				if(isset($tr_obj->position) ) {
+					if($tr_obj->position === 0) $tr_obj->rewind();
 					if($this->source_pointer < count($tr_obj)) {
 						$source = $tr_obj->current();
 						$tr_obj->position = $this->source_pointer;
@@ -614,7 +615,11 @@ class Scope {
 		/**
 		 * Else count the iterations
 		 */
-		else $this->source_count = count($source);
+		else {
+			if($source instanceof \Traversable) $source->rewind();
+			$this->source_count = count($source);
+		}
+
 		
 		/**
 		 * Reset the pointer
