@@ -7,6 +7,8 @@ use Exception;
 class _If extends Node {
 	
 	public function ready() {
+
+		$this->can_preload = false;
 		$this->element = false;
 	}
 	

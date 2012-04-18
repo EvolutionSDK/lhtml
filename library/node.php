@@ -14,6 +14,7 @@ class Node {
 	public $fake_element;
 	public $attributes = array();
 	public $children = array();
+	public $can_preload = true;
 	
 	/**
 	 * Iteration Variables
@@ -70,7 +71,7 @@ class Node {
 	 * @author Nate Ferrero
 	 */
 	public final function _ready($doSelf = true) {
-		if(!$this->inLoop() && !$this->_ready)
+		if($this->canPreload() && !$this->_ready)
 			$this->_init_scope();
 
 		if($doSelf && !$this->_ready && method_exists($this, 'ready'))
@@ -500,6 +501,7 @@ class Node {
 		if(isset($this->attributes[':load']) && isset($this->attributes[':iterate'])) {
 			$this->loop_type = $this->attributes[':iterate'];
 			$this->is_loop = true;
+			$this->can_preload = false;
 		}
 
 		/**
@@ -518,6 +520,14 @@ class Node {
 		if(is_object($this->_))
 			return $this->_->inLoop();
 		return false;
+	}
+
+	public function canPreload() {
+		if(!$this->can_preload)
+			return false;
+		if(is_object($this->_))
+			return $this->_->canPreload();
+		return true;
 	}
 
 	/**
