@@ -64,6 +64,8 @@ class Node {
 		return $this->fake_element;
 	}
 
+	public function scope_ready() {}
+
 	public $_ready = false;
 	
 	/**
@@ -323,7 +325,7 @@ class Node {
 		 */
 		$attrs = explode(' ', $attrs);
 		foreach($attrs as $key=>$attr) {
-			list($key, $attr) = explode('=',str_replace("\"", $attr));
+			list($key, $attr) = explode('=',str_replace("\"", "", $attr));
 			$attrs[$key] = $attr;
 		}
 		
@@ -511,7 +513,11 @@ class Node {
 			$this->_data = new Scope($this);
 		
 		if(isset($source) && isset($as)) $this->_data()->source($source, $as);
-		
+
+		/**
+		 * Ready Scope
+		 */
+		$this->scope_ready();
 	}
 
 	public function inLoop() {
