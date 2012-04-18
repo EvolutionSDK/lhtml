@@ -64,8 +64,6 @@ class Node {
 		return $this->fake_element;
 	}
 
-	public function scope_ready() {}
-
 	public $_ready = false;
 	
 	/**
@@ -336,7 +334,7 @@ class Node {
 	}
 	
 	public function build($pre = true) {
-
+		
 		if($pre)
 			$this->_init_scope();
 
@@ -355,12 +353,6 @@ class Node {
 		} else {
 			$once = 1;
 		}
-
-		/**
-		 * Prebuild
-		 */
-		if(method_exists($this, 'prebuild'))
-			$this->prebuild();
 
 		/**
 		 * Start counting loops
@@ -384,6 +376,12 @@ class Node {
 		if($this->_ instanceof Node && method_exists($this->_, 'childNodeBeforeBuild')) {
 			$this->_->childNodeBeforeBuild($this);
 		}
+
+		/**
+		 * Prebuild
+		 */
+		if(method_exists($this, 'prebuild'))
+			$this->prebuild();
 		
 		/**
 		 * If is a complete tag render it and return
@@ -523,7 +521,6 @@ class Node {
 		 * Ready Scope
 		 */
 		if(!$this->scope_initialized) {
-			$this->scope_ready();
 			$this->scope_initialized = true;
 		}
 	}
