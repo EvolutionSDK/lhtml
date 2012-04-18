@@ -511,7 +511,12 @@ class Node {
 			$this->_data = new Scope($this);
 		
 		if(isset($source) && isset($as)) $this->_data()->source($source, $as);
-		
+
+		/**
+		 * Ready Scope
+		 */
+		if(method_exists($this, 'scope_ready'))
+			$this->scope_ready();
 	}
 
 	public function inLoop() {
