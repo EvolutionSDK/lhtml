@@ -325,7 +325,7 @@ class Node {
 		 */
 		$attrs = explode(' ', $attrs);
 		foreach($attrs as $key=>$attr) {
-			list($key, $attr) = explode('=',str_replace("\"", $attr));
+			list($key, $attr) = explode('=',str_replace("\"", "", $attr));
 			$attrs[$key] = $attr;
 		}
 		
