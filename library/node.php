@@ -467,7 +467,6 @@ class Node {
 	
 	public function _init_scope($new = false) {
 
-		$this->scope_initialized = true;
 		if(!$new) {
 			$var = false;
 			/**
@@ -517,7 +516,10 @@ class Node {
 		/**
 		 * Ready Scope
 		 */
-		$this->scope_ready();
+		if(!$this->scope_initialized) {
+			$this->scope_ready();
+			$this->scope_initialized = true;
+		}
 	}
 
 	public function inLoop() {
