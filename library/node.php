@@ -357,6 +357,12 @@ class Node {
 		}
 
 		/**
+		 * Prebuild
+		 */
+		if(method_exists($this, 'prebuild'))
+			$this->prebuild();
+
+		/**
 		 * Start counting loops
 		 */
 		$loop = 0;
@@ -543,7 +549,6 @@ class Node {
 	 * @author Kelly Becker
 	 */
 	public function source($as, $source) {
-		$this->scope_initialized = true;
 
 		if(!isset($this->_data))
 			$this->_data = new Scope($this);
