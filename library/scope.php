@@ -158,43 +158,54 @@ class Scope {
 		/**
 		 * Hook functions
 		 */
-		else if(is_array($map[0]) && isset($map[0]['func']) && strpos($map[0]['func'],':')===0 && self::hookExists($map[0]['func'])) {
+		else if(is_array($map[0]) && isset($map[0]['func']) && strpos($map[0]['func'],':')===0) {
 
-			$hook = self::getHook($map[0]['func']);
-
-			if(is_callable($hook)) {
-				$source = call_user_func_array($hook, $map[0]['args']);
-				$flag_first=1;
-
-				if($ztrace)
-					$zsteps[] = array('hook function' => $hook, 'args' => $map[0]['args']);
-			}
+			if(!self::hookExists($map[0]['func']))
+				;//throw new Exception("Hook `" . $map[0]['func'] . "` does not exist");
 			else {
-				$func = $map[0]['func'];
-				throw new Exception("LHTML hook `$func` is not callable");
+				$hook = self::getHook($map[0]['func']);
+
+				if(is_callable($hook)) {
+					$source = call_user_func_array($hook, $map[0]['args']);
+					$flag_first=1;
+
+					if($ztrace)
+						$zsteps[] = array('hook function' => $hook, 'args' => $map[0]['args']);
+				}
+				else {
+					$func = $map[0]['func'];
+					throw new Exception("LHTML hook `$func` is not callable");
+				}
 			}
 
 		}
 
-		else if(is_string($map[0]) && strpos($map[0],':')===0 && self::hookExists($map[0])) {
+		/**
+		 * Hook simple call
+		 */
+		else if(is_string($map[0]) && strpos($map[0],':')===0) {
 
-			$hook = self::getHook($map[0]);
-
-			if(is_callable($hook)) {
-
-				if($ztrace)
-					$zsteps[] = array('hook function' => $hook);
-
-				$source = $hook();
-				$flag_first=1;
-			}
+			if(!self::hookExists($map[0]))
+				;//throw new Exception("Hook `$map[0]` does not exist");
 			else {
+				$hook = self::getHook($map[0]);
 
-				if($ztrace)
-					$zsteps[] = array('hook value' => $hook);
+				if(is_callable($hook)) {
 
-				$source = $hook;
-				$flag_first=1;
+					if($ztrace)
+						$zsteps[] = array('hook function' => $hook);
+
+					$source = $hook();
+					$flag_first=1;
+				}
+				else {
+
+					if($ztrace)
+						$zsteps[] = array('hook value' => $hook);
+
+					$source = $hook;
+					$flag_first=1;
+				}
 			}
 			
 		}
@@ -330,7 +341,6 @@ class Scope {
 			if($source instanceof Closure)
 				$source = $source();
 
-			if($map[0] == ':get' && $map[1] == 'test') echo(' | i:'.$i.' | flag: '.$flag_first);
 			if($flag_first && $i < $flag_first) {
 
 				if($ztrace)
