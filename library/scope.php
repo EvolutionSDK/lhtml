@@ -270,7 +270,7 @@ class Scope {
 				if(isset($tr_obj->position) ) {
 					if($tr_obj->position == 0 ) $tr_obj->rewind();
 
-					if($this->source_pointer < $tr_obj->count()) {
+					if($this->source_pointer < count($tr_obj)) {
 						$tr_obj->position = $this->source_pointer;
 						$source = $tr_obj->current();
 					}
