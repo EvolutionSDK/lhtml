@@ -268,10 +268,11 @@ class Scope {
 
 				# artificially boost the pointer without having to iterate through each item again.
 				if(isset($tr_obj->position) ) {
-					if($tr_obj->position === 0) $tr_obj->rewind();
-					if($this->source_pointer < count($tr_obj)) {
-						$source = $tr_obj->current();
+					if($tr_obj->position == 0 ) $tr_obj->rewind();
+
+					if($this->source_pointer < $tr_obj->count()) {
 						$tr_obj->position = $this->source_pointer;
+						$source = $tr_obj->current();
 					}
 					else unset($source);
 				}
