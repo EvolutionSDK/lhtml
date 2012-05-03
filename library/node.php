@@ -342,6 +342,22 @@ class Node {
 			dump($this);
 
 		$output = "";
+
+		/**
+		 * Check for debug dumps
+		 * @author Nate Ferrero
+		 */
+		if(!empty($this->attributes['_e_dump']))
+			$dump = $this->attributes['_e_dump'];
+		else
+			$dump = false;
+
+		/**
+		 * Dump the current node
+		 * @author Nate Ferrero
+		 */
+		if($dump == 'node')
+			dump($this);
 		
 		/**
 		 * If requires iteration
@@ -349,7 +365,7 @@ class Node {
 		 */
 		if($this->is_loop) {
 			$this->_data()->reset();
-			e\trace_enter('LHTML Iteration Loop',$this->attributes[':load'], array(), 7);
+			e\trace_enter('LHTML Iteration Loop', $this->attributes[':load'], array(), 7);
 		} else {
 			$once = 1;
 		}
@@ -358,6 +374,15 @@ class Node {
 		 * Start counting loops
 		 */
 		$loop = 0;
+
+		if($dump == 'loop')
+			$loopDebug = array('before' => array(
+				'index' => $loop,
+				'is_loop' => $this->is_loop,
+				':load' => $this->attributes[':load'],
+				'data' => $this->_data(),
+				'iteratable' => $this->_data()->iteratable()
+			));
 		
 		/**
 		 * Start build loop
@@ -438,6 +463,13 @@ class Node {
 		 * End build loop
 		 */
 		}
+
+		/**
+		 * Dump loop information
+		 * @author Nate Ferrero
+		 */
+		if($dump == 'loop')
+			dump($loopDebug);
 
 		/**
 		 * Show empty content if loop did not iterate
