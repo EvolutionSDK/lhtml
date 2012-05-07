@@ -544,8 +544,8 @@ class Scope {
 				if($retval) $var = $result;
 				else $var = $else;
 			}
-			else if(strpos($cond, ' () ') !== false) {
-				list($cond, $compare) = explode(' () ', $cond);
+			else if(strpos($cond, ' )( ') !== false) {
+				list($cond, $compare) = explode(' )( ', $cond);
 				$val = $this->get($cond, $depth);
 				$cval = explode(',', $this->get($compare, $depth));
 				$retval = true;
