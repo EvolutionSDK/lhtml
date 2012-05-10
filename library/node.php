@@ -43,7 +43,7 @@ class Node {
 	 */
 	public static $complete_tags = array('br','hr','link','img');
 	
-	public function __construct($element = false, $parent = false) {
+	public function __construct($element = false, &$parent = false) {
 
 		$this->_idx = uniqid('node-', true);
 
@@ -52,7 +52,7 @@ class Node {
 		 */
 		$this->fake_element = $element;
 		$this->element = $element;
-		if($parent) $this->_ = $parent;
+		if($parent) $this->_ =& $parent;
 		
 		/**
 		 * Initialize a new Scope if one does not exist
@@ -255,6 +255,57 @@ class Node {
 			$child->printInfo();
 		}
 		echo "</ul></li>";
+	}
+
+	/**
+	 * Search up the Node Stack for a parent element
+	 * @author Kelly Becker
+	 */
+	public function findParent($tag) {
+		$tag = strtolower($tag);
+
+		$parent = $this->parent();
+
+		if(!is_object($parent))
+			return false;
+
+		if($parent->fake_element === $tag)
+			return $parent;
+
+		return $parent->findParent($tag);
+	}
+
+	/**
+	 * Search up the Node Stack for a child of a parent element
+	 * @author Kelly Becker
+	 */
+	public function findChildOfParent($tag) {
+		$tag = strtolower($tag);
+
+		$parent = $this->parent();
+
+		if(!is_object($parent))
+			return false;
+
+		$ret = $parent->returnChild($tag);
+		if(!$ret) return $parent->findChildOfParent($tag);
+
+		return $ret;
+	}
+
+	/**
+	 * Return an immeditate child of an element
+	 * @author Kelly Becker
+	 */
+	public function returnChild($tag) {
+		$tag = strtolower($tag);
+
+		foreach($this->children as $child) {
+			if(!($child instanceof Node)) continue;
+			if(strtolower($child->fake_element) === $tag)
+				return $child;
+		}
+		return false;
 	}
 
 	/**
