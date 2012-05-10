@@ -71,18 +71,45 @@ class Node {
 	 * @author Nate Ferrero
 	 */
 	public final function _ready($doSelf = true) {
+
 		if($this->canPreload() && !$this->_ready)
 			$this->_init_scope();
 
 		if($doSelf && !$this->_ready && method_exists($this, 'ready'))
 			$this->ready();
 
+		if(empty($this->_)) e\trace('Initializing LHTML Ready');
+
 		foreach($this->children as $child) {
 			if($child instanceof Node)
 				$child->_ready();
 		}
 
+		/**
+		 * Run another event after ready
+		 * @author Kelly Becker
+		 */
+		if(empty($this->_)) $this->_afterReady();
+
 		$this->_ready = true;
+
+		if(empty($this->_)) e\trace('LHTML Ready Done');
+	}
+
+	/**
+	 * Run after ready
+	 * @author Kelly Becker
+	 */
+	public function _afterReady() {
+		if(empty($this->_)) e\trace('Initializing LHTML afterReady');
+
+		if(method_exists($this, 'afterReady'))
+			$this->afterReady();
+
+		foreach($this->children as $child) {
+			if($child instanceof Node)
+				$child->_afterReady();
+		}
 	}
 	
 	public function _error($err = 'Error') {
