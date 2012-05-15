@@ -412,6 +412,21 @@ class Node {
 	}
 	
 	public function build($pre = true) {
+
+		/**
+		 * Allow Events to be run during build
+		 * @author Kelly Becker
+		 */
+		if(isset($this->attributes[':event'])) {
+			switch($this->attributes[':event']) {
+				case 'reverse-children':
+					$this->children = array_reverse($this->children);
+				break;
+				default:
+					e::$events->lhtmlBuildEvent($this, $this->attributes[':event']);
+				break;
+			}
+		}
 		
 		if($pre)
 			$this->_init_scope();
