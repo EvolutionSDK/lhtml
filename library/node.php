@@ -412,149 +412,205 @@ class Node {
 	}
 	
 	public function build($pre = true) {
+		$displayContent = true;
 
 		/**
-		 * Allow Events to be run during build
+		 * Allow Events to be run right before build
 		 * @author Kelly Becker
 		 */
-		if(isset($this->attributes[':event'])) {
-			switch($this->attributes[':event']) {
+		if(isset($this->attributes[':trigger-event'])) {
+			switch($this->attributes[':trigger-event']) {
 				case 'reverse-children':
 					$this->children = array_reverse($this->children);
 				break;
 				default:
-					e::$events->lhtmlBuildEvent($this, $this->attributes[':event']);
+					e::$events->lhtmlBuildEvent($this, $this->attributes[':trigger-event']);
 				break;
 			}
 		}
 		
-		if($pre)
-			$this->_init_scope();
+		/**
+		 * Load Sourcing
+		 */
+		if($pre) $this->_init_scope();
 
-		if(isset($_GET['--lhtml-stack']) && $_GET['--lhtml-stack'] == $this->fake_element)
-			dump($this);
-
+		/**
+		 * Start the output string for rendered data
+		 */
 		$output = "";
 
 		/**
 		 * Check for debug dumps
 		 * @author Nate Ferrero
 		 */
-		if(!empty($this->attributes['_e_dump']))
-			$dump = $this->attributes['_e_dump'];
-		else
-			$dump = false;
-
-		/**
-		 * Dump the current node
-		 * @author Nate Ferrero
-		 */
-		if($dump == 'node')
-			dump($this);
+		if(!empty($this->attributes[':dump']))
+			$dump = $this->attributes[':dump'];
+		else $dump = false;
 		
 		/**
-		 * If requires iteration
-		 * else just execute the loop once
+		 * Run a debug dump
+		 * @author Kelly Becker
+		 */
+		if(!empty($dump)) switch($dump) {
+			case 'scope':
+				dump($this->_data());
+			break;
+			case 'node':
+			default:
+				dump($this);
+			break;
+		}
+
+		/**
+		 * Are we in a loop
 		 */
 		if($this->is_loop) {
 			$this->_data()->reset();
 			e\trace_enter('LHTML Iteration Loop', $this->attributes[':load'], array(), 7);
-		} else {
-			$once = 1;
-		}
+		} else $once = 1;
 
 		/**
 		 * Start counting loops
 		 */
 		$loop = 0;
 
-		if($dump == 'loop')
-			$loopDebug = array('before' => array(
-				'index' => $loop,
-				'is_loop' => $this->is_loop,
-				':load' => $this->attributes[':load'],
-				'data' => $this->_data(),
-				'iteratable' => $this->_data()->iteratable()
-			));
+		/**
+		 * Prepare loop dump information if requested
+		 */
+		if($dump == 'loop') $loopDebug = array('before' => array(
+			'index' => $loop,
+			'is_loop' => $this->is_loop,
+			':load' => $this->attributes[':load'],
+			'data' => $this->_data(),
+			'iteratable' => $this->_data()->iteratable()
+		));
 		
 		/**
 		 * Start build loop
 		 */
 		while($this->is_loop ? $this->_data()->iteratable() : $once--) {
 		
-		/**
-		 * Increment Loop Count
-		 */
-		$loop++;
-		
-		/**
-		 * Allow manipulation of child elements
-		 * @author Nate Ferrero
-		 */
-		if($this->_ instanceof Node && method_exists($this->_, 'childNodeBeforeBuild')) {
-			$this->_->childNodeBeforeBuild($this);
-		}
-
-		/**
-		 * Prebuild
-		 */
-		if(method_exists($this, 'prebuild'))
-			$this->prebuild();
-		
-		/**
-		 * If is a complete tag render it and return
-		 */
-		if(in_array($this->element, self::$complete_tags)) return "<$this->element".$this->_attributes_parse().' />';
-		
-		/**
-		 * If it's a doctype element TODO clean this up / standardize
-		 */
-		if(isset($this->_code) && isset($this->_code->special) && $this->_code->special === 'doctype') {
-			return "<!$this->element>";
-		}
-		
-		/**
-		 * If is a real element create the opening tag - output when self looping or on first loop iteration
-		 */
-		else if($this->element !== '' && $this->element && ($this->loop_type !== 'contents' || $loop === 1))
-			$output .= "<$this->element".$this->_attributes_parse().'>';
-		
-		/**
-		 * Loop thru the children and populate this tag
-		 */
-		if(!empty($this->children)) foreach($this->children as $child) {
+			/**
+			 * Increment Loop Count
+			 */
+			$loop++;
 			
-			if($child instanceof Node) {
-				if($child->_ !== $this)
-					$child->attributes['lhtml_node_warning'] = "Parent node is different than the node which included this node as a child, expect scope issues.";
-				try {
-					$output .= $child->build();
+			/**
+			 * Allow manipulation of child elements
+			 * @author Nate Ferrero
+			 */
+			if($this->_ instanceof Node && method_exists($this->_, 'childNodeBeforeBuild')) {
+				$this->_->childNodeBeforeBuild($this);
+			}
+	
+			/**
+			 * Prebuild
+			 */
+			if(method_exists($this, 'prebuild'))
+				$this->prebuild();
+			
+			/**
+			 * If is a complete tag render it and return
+			 */
+			if(in_array($this->element, self::$complete_tags)) return "<$this->element".$this->_attributes_parse().' />';
+			
+			/**
+			 * If it's a doctype element TODO clean this up / standardize
+			 */
+			if(isset($this->_code) && isset($this->_code->special) && $this->_code->special === 'doctype') {
+				return "<!$this->element>";
+			}
+			
+			/**
+			 * If is a real element create the opening tag - output when self looping or on first loop iteration
+			 */
+			else if($this->element !== '' && $this->element && ($this->loop_type !== 'contents' || $loop === 1))
+				$output .= "<$this->element".$this->_attributes_parse().'>';
+			
+			/**
+			 * Loop thru the children and populate this tag
+			 */
+			if(!empty($this->children)) foreach($this->children as $child) {
+				
+				if($child instanceof Node && $displayContent) {
+					if($child->_ !== $this)
+						$child->attributes['lhtml_node_warning'] = "Parent node is different than the node which included this node as a child, expect scope issues.";
+					try {
+						$output .= $child->build();
+					}
+					catch(NotFoundException $e) {
+						throw $e;
+					}
+					catch(Exception $e) {
+						e\trace_exception($e);
+						$output .= $child->_error($e)->build();
+					}
 				}
-				catch(NotFoundException $e) {
-					throw $e;
-				}
-				catch(Exception $e) {
-					e\trace_exception($e);
-					$output .= $child->_error($e)->build();
+				
+				else if(is_string($child)) {
+					
+					/**
+					 * Handle Comment Functions
+					 */
+					if(strpos($child, '<!--@') !== FALSE) {
+						$child = substr(substr($child, 5), 0, -3);
+						$child = trim($child);
+						list($func, $args) = explode(' ', $child, 2);
+						
+						//dump(array($func, $args));
+						
+						/**
+						 * Switch Functions
+						 */
+						switch($func) {
+							case 'IF':
+								$displayContent = $this->_data()->evaluate(trim($args));
+								if($displayContent) $displayContentUsed = true;
+							break;
+							case 'ELSEIF':
+								if($displayContent !== true && !$displayContentUsed) {
+									$displayContent = $this->_data()->evaluate(trim($args));
+									if($displayContent) $displayContentUsed = true;
+								}
+								
+								else $displayContent = false;
+							break;
+							case 'ELSE':
+								if($displayContent !== true && !$displayContentUsed) {
+									$displayContent = true;
+									$displayContentUsed = true;
+								}
+								
+								else $displayContent = false;
+							break;
+							case 'ENDIF':
+							default:
+								$displayContent = true;
+								$displayContentUsed = false;
+							break;
+						}
+						
+					}
+					
+					else if($displayContent)
+						$output .= $this->_string_parse($child);
 				}
 			}
-			else if(is_string($child)) $output .= $this->_string_parse($child);
-		}
-		
-		/**
-		 * If a loop increment the pointer
-		 */
-		if($this->is_loop) $this->_data()->next();
-
-		/**
-		 * Close the tag - output when self looping or on last loop iteration
-		 */
-		if($this->element !== '' && $this->element && ($this->loop_type !== 'contents' || !$this->_data()->iteratable()))
-			$output .= "</$this->element>";
-		
-		/**
-		 * End build loop
-		 */
+			
+			/**
+			 * If a loop increment the pointer
+			 */
+			if($this->is_loop) $this->_data()->next();
+	
+			/**
+			 * Close the tag - output when self looping or on last loop iteration
+			 */
+			if($this->element !== '' && $this->element && ($this->loop_type !== 'contents' || !$this->_data()->iteratable()))
+				$output .= "</$this->element>";
+			
+			/**
+			 * End build loop
+			 */
 		}
 
 		/**
@@ -571,6 +627,9 @@ class Node {
 		if($loop === 0) foreach($this->children as $node)
 			if($node->fake_element == ':empty') return $node->build(true);
 		
+		/**
+		 * Exit and reset the loop
+		 */
 		if($this->is_loop) {
 			e\trace_exit();
 			$this->_data()->reset();

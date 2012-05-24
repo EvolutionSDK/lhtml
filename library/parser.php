@@ -340,8 +340,8 @@ class Parser {
 					/**
 					 * Save the comment as a child
 					 */
-					if($token->value[1] !== '@')
-						$stack->_cdata("<!-$token->value-->");
+					if($token->value[1] !== '#')
+						$stack->_cdata("<!-".$token->value."-->");
 					break;
 					
 				default:

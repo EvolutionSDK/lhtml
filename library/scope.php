@@ -74,6 +74,9 @@ class Scope {
 	}
 	
 	public function get($var_map, $depth = 0, $ztrace = false, $zsteps = array()) {
+	
+		if($var_map === 'true') return true;
+		if($var_map === 'false') return false;
 
 		/**
 		 * Add a condition to trace a source variable
@@ -455,6 +458,176 @@ class Scope {
 			dump($zsteps);
 
 		return $source;
+	}
+	
+	/*
+	 * Evaluate any condition string and return true or false based off the conditions.
+	 * @author David Boskovic
+	 * Examples: (:member.id > 1 || (:member.id == -5 && :member.status != 4 )) && :member.name|length > 1
+	 */
+	public function evaluate($string) {
+	
+		$string = '('.$string.')';
+		$match = 1;
+		while($match) {
+			
+			$matches = $this->_get_matches("/\([^\(\)]*\)/", $string);
+			if(!$matches) $match = false;
+			foreach($matches as $match) {
+				$cmatch = trim($match,'()');
+				$logical_ops = array('AND', 'OR', '&&', '||');
+				$logical_segs = $this->_divide_string($cmatch, $logical_ops);
+				if(count($logical_segs) === 1) {
+					$a = $this->_evaluate_comparison($logical_segs[0]);
+				} else {
+					if(!(count($logical_segs)%2)) throw new Exception($string." can't be evaluated because of a bad logical operator structure. Please review and try again.");
+					
+					$a = false;
+					$op = false;
+					$b = false;
+					foreach($logical_segs as $item) {
+						if(in_array($item, $logical_ops)) {
+							$op = $item;
+						} elseif($a) {
+							$b = $item;
+							// compare now
+							switch($op) {
+								case 'AND':
+								case '&&':
+									if($this->_evaluate_comparison($a) && $this->_evaluate_comparison($b)) $a = 'true';
+									else $a = 'false';
+								break;
+								case 'OR':
+								case '||':
+									if($this->_evaluate_comparison($a) || $this->_evaluate_comparison($b)) $a = 'true';
+									else $a = 'false';
+								break;
+							}
+						} else {
+							$a = $item;
+						}
+					}
+				}
+				$string = str_replace($match, $a, $string);
+			}
+
+		}		
+
+		return $this->_evaluate_comparison($string);
+		
+		//	evaluate open conditions
+		
+		
+	}
+	
+	private function _evaluate_comparison($comp) {
+		
+				$ops = array('==', '!=', '===', '!==','<>','<','>','<=','>=');
+				$p = false;
+				foreach($ops as $i) {
+					if(strpos($comp, " $i ") !== false) $p = true;
+				}
+				if($p == false) {
+					$a = $comp;
+					$op = '==';
+					$b = 'true';
+				}
+				else
+					list($a, $op, $b) = $this->_divide_string($comp, $ops);
+				$eval_a = $this->get($a);
+				$eval_b = $this->get($b);
+				
+				switch($op) {
+					case '==':
+						$result = $eval_a == $eval_b;
+					break;
+					case '!=':
+					case '<>':
+						$result = $eval_a != $eval_b;
+					break;
+					case '===':
+						$result = $eval_a === $eval_b;
+					break;
+					case '!==':
+						$result = $eval_a !== $eval_b;
+					break;
+					case '<':
+						$result = $eval_a < $eval_b;
+					break;
+					case '>':
+						$result = $eval_a > $eval_b;
+					break;
+					case '<=':
+						$result = $eval_a <= $eval_b;
+					break;
+					case '>=':
+						$result = $eval_a >= $eval_b;
+					break;
+				}
+				return $result;
+	}
+	
+	private function _divide_string($string, $array) {
+		$string = " $string ";
+	
+		/**
+		 * Determine where the operators are
+		 */
+		$index = array();
+		foreach($array as $split) {
+			$split = ' '.$split.' ';
+		
+			$pos = 0;
+			while(($pos = strpos($string, $split, $pos)) !== FALSE) {
+				$index[$pos] = $split;
+				$pos += strlen($split);
+			}
+			
+		}
+		
+		/**
+		 * Sort the array by index (character positions)
+		 */
+		ksort($index);
+		
+		/**
+		 * Prepare the output of the divided string
+		 */
+		$output = array();
+		$lp = 0;
+		foreach($index as $pos => $delim) {
+			$output[] = substr($string, $lp, $pos - $lp);
+			$output[] = $delim;
+			$lp = $pos + strlen($delim);
+		}
+		
+		/**
+		 * Append the last part of the condition
+		 */
+		if(substr($string, $lp)) $output[] = substr($string, $lp);
+		
+		/**
+		 * Trim the array strings
+		 */
+		foreach($output as &$trim)
+			$trim = trim($trim);
+				
+		return $output;
+	
+	}
+	
+	private function _get_matches($regex, $string) {
+		preg_match_all(
+				$regex, //regex
+				$string, // source
+				$matches_vars, // variable to export results to
+				PREG_SET_ORDER // settings
+			);
+			
+			foreach((array)$matches_vars as $var) {
+				$vars[] = $var[0];
+			}
+			return $vars;
 	}
 	
 	public function parse($var, $depth = 0) {
