@@ -121,12 +121,13 @@ class Bundle {
 					$file = "$dir/$segment.lhtml";
 					$matched = 'file';
 				}
-				elseif($matched != 'file') {
+				elseif($matched != 'file' && $matched != 'dir') {
 					$badmatch = true;
+					break;
 				}
 			}
 			
-			if($matched != 'file' && is_file("$dir/index.lhtml")) {
+			if($matched == 'dir' && !$badmatch && is_file("$dir/index.lhtml")) {
 				$file = "$dir/index.lhtml";
 				$matched = 'index';
 			}
