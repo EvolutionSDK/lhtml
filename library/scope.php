@@ -243,7 +243,12 @@ class Scope {
 			 * Literal number
 			 */
 			else if(is_string($map[0]) && is_numeric($map[0])) {
-				$source = $map[0];
+
+				/**
+				 * Decimal Support
+				 */
+				if(count($map) === 2) $source = implode('.', $map);
+				else $source = $map[0];
 
 				if($ztrace) {
 					$zsteps[] = array('number' => $source);
@@ -428,6 +433,11 @@ class Scope {
 					$source = false;
 				}
 			}
+
+			else if(is_numeric($source)) {
+				$source = (float) $source;
+			}
+
 			else $source = false;
 		}
 
@@ -534,6 +544,7 @@ class Scope {
 				}
 				else
 					list($a, $op, $b) = $this->_divide_string($comp, $ops);
+
 				$eval_a = $this->get($a);
 				$eval_b = $this->get($b);
 				
