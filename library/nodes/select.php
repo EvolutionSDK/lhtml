@@ -36,8 +36,8 @@ class Select extends Node {
 		 * Cache the selected attribute to avoid re-parsing
 		 * @author Nate Ferrero
 		 */
-		$this->attributes['selected'] = isset($this->attributes['selected']) ? 
-			$this->_string_parse($this->attributes['selected']) : null;
+		$selected = isset($this->attributes['selected']) ? $this->_string_parse($this->attributes['selected']) : null;
+		if(!empty($selected)) $this->attributes['selected'] = $selected;
 		
 		/**
 		 * Render the code
