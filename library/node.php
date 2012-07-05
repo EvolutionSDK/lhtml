@@ -901,6 +901,9 @@ class Node {
 		return $vars;
 	}
 	
+	/**
+	 * @todo this is a bad method...  $object->name  there's no required ->name vars on bundles
+	 */
 	protected function describe(&$object) {
 		if(method_exists($object, '__toString'))
 			return $object->__toString();
