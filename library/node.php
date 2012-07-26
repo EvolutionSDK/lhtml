@@ -593,7 +593,8 @@ class Node {
 					}
 					
 					else if($displayContent)
-						$output .= $this->_string_parse($child);
+						$output .= $this->element == 'script' && isset($this->attributes[':delimiter']) ? $this->_string_parse($child, false, true) : $this->_string_parse($child);
+
 				}
 			}
 			
@@ -745,14 +746,16 @@ class Node {
 	 * @return void
 	 * @author Kelly Lauren Summer Becker
 	 */
-	public function _string_parse($value, $returnObjects = false) {
-		$vars = $this->extract_vars($value);
+	public function _string_parse($value, $returnObjects = false, $js = false) {
+
+		$delim = $js ? array('%','%') : array('{','}');
+		$vars = $this->extract_vars($value, $delim);
 
 		/**
 		 * Only allow returning objects when the entire string is used for the object alone
 		 * @author Nate Ferrero
 		 */
-		if($returnObjects && count($vars) === 1 && $value === "{".$vars[0]."}");
+		if($returnObjects && count($vars) === 1 && $value === "$delim[0]".$vars[0]."$delim[1]");
 		else $returnObjects = false;
 
 		if($vars) foreach($vars as $var) {
@@ -763,7 +766,7 @@ class Node {
 				$data_response = $this->describe($data_response);
 			}
 				
-			$value = str_replace('{'.$var.'}', $data_response, $value);
+			$value = str_replace("$delim[0]".$var."$delim[1]", $data_response, $value);
 		}
 	
 		return $value;
@@ -840,12 +843,12 @@ class Node {
 	/**
 	 * Extract Variables
 	 */
-	protected function extract_vars($content) {
+	protected function extract_vars($content,$delim = array('{', '}')) {
 		
-		if(strpos($content, '{') === false) return array();
+		if(strpos($content, $delim[0]) === false) return array();
 		// parse out the variables
 		preg_match_all(
-			"/{([\w:@|.\,\(\)\/\-\% \[\]\?'=]+?)}/", //regex
+			"/$delim[0]([\w:@|.\,\(\)\/\-\% \[\]\?'=]+?)$delim[1]/", //regex
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
