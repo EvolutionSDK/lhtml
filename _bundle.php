@@ -231,6 +231,26 @@ class Instance {
 		return $this;
 	}
 
+	public function evaluate($condition, $data) {
+		$scope = new Scope;
+		if(is_array($data)) {
+			foreach($data as $key => $value) {
+				$scope->$key = $value;
+			}
+		}
+		return $scope->evaluate($condition);
+	}
+
+	public function evaluateString($string, $data = array()) {
+		$stack = $this->string($string)->parse();
+		$scope = $stack->_data();
+		foreach($data as $key => $value) {
+			$scope->$key = $value;
+		}
+		$stack->_ready();
+		return $stack->build();
+	}
+
 	/**
 	 * Override content type
 	 * @author Nate Ferrero

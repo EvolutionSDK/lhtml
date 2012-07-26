@@ -489,7 +489,7 @@ class Node {
 		 * Start build loop
 		 */
 		while($this->is_loop ? $this->_data()->iteratable() : $once--) {
-		
+
 			/**
 			 * Increment Loop Count
 			 */
