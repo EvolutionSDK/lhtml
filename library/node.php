@@ -494,6 +494,15 @@ class Node {
 			 * Increment Loop Count
 			 */
 			$loop++;
+
+			/**
+			 * Prebuild
+			 * Moved above child before
+			 * @author Kelly Becker
+			 * @since July 13 2012
+			 */
+			if(method_exists($this, 'prebuild'))
+				$this->prebuild();
 			
 			/**
 			 * Allow manipulation of child elements
@@ -502,12 +511,6 @@ class Node {
 			if($this->_ instanceof Node && method_exists($this->_, 'childNodeBeforeBuild')) {
 				$this->_->childNodeBeforeBuild($this);
 			}
-	
-			/**
-			 * Prebuild
-			 */
-			if(method_exists($this, 'prebuild'))
-				$this->prebuild();
 			
 			/**
 			 * If is a complete tag render it and return

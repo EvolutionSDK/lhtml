@@ -6,14 +6,17 @@ use Exception;
 use e;
 
 class Select extends Node {
-	
-	public function ready() {
-		$this->element = 'select';
 
-		/**
-		 * @todo Fix local select types
-		 * @author Nate Ferrero
-		 */
+	private $selected = null;
+	
+	/**
+	 * Switched to use prebuild() over ready() so the scope is initiated
+	 * @author Kelly Becker
+	 * @since July 13th 2012
+	 */
+	public function prebuild() {
+		$this->element = 'select';
+		$this->selected = null;
 
 		/**
 		 * Alternate TAG Info
@@ -36,8 +39,7 @@ class Select extends Node {
 		 * Cache the selected attribute to avoid re-parsing
 		 * @author Nate Ferrero
 		 */
-		$selected = isset($this->attributes['selected']) ? $this->_string_parse($this->attributes['selected']) : null;
-		if(!empty($selected)) $this->attributes['selected'] = $selected;
+		$this->selected = isset($this->attributes['selected']) ? $this->_string_parse($this->attributes['selected']) : null;
 		
 		/**
 		 * Render the code
@@ -53,7 +55,7 @@ class Select extends Node {
 			 */
 			else {
 				$method = 'lhtmlNodeSelect'.ucwords(strtolower($atype));
-				$tmp = e::$events->$method($aopts, $this->attributes['selected']);
+				$tmp = e::$events->$method($aopts, $this->selected);
 				$tmp = count($tmp) < 1 ? '' : array_shift($tmp);
 				if(!is_string($tmp)) throw new Exception("Select event must return a string.");
 				else $output .= $tmp;
@@ -73,25 +75,27 @@ class Select extends Node {
 	 * @author Nate Ferrero
 	 */
 	public function childNodeBeforeBuild(&$child) {
+
+		// If the child is not an instance of Node then don't bother
 		if(!($child instanceof Node))
 			return;
-		$value = isset($child->attributes['value']) ? 
-			$child->_string_parse($child->attributes['value']) : null;
+
+		// Get the value of the option tag
+		$value = isset($child->attributes['value']) ? $child->_string_parse($child->attributes['value']) : null;
 
 		/**
 		 * Since it's the same "Node" being iterated, we must set AND unset the selected attribute
 		 * @author Nate Ferrero
 		 */
-		if(!is_null($value) && $value == $this->attributes['selected'])
+		if(!is_null($value) && $value == $this->selected)
 			$child->attributes['selected'] = 'selected';
-		else
-			unset($child->attributes['selected']);
+		else unset($child->attributes['selected']);
 	}
 
 	private function _select_month($opts) {
 		for($x=1;$x<13;$x++) {
 			$date = mktime(0, 0, 0, $x, 1, date("Y"));
-			$selected = $this->_string_parse($this->attributes['selected']) == (string) $x ? 'selected="selected"' : '';
+			$selected = $this->_string_parse($this->selected) == (string) $x ? 'selected="selected"' : '';
 			$output .= "<option value=\"$x\" $selected>".date("m - M",$date)."</option>";
 		}
 
@@ -106,7 +110,7 @@ class Select extends Node {
 
 		for($x=$back;$x<$forward;$x++) {
 			$date = mktime(0, 0, 0, 1, 1, date("Y") + $x);
-			$selected = $this->_string_parse($this->attributes['selected']) == (string) date("Y",$date) ? 'selected="selected"' : '';
+			$selected = $this->_string_parse($this->selected) == (string) date("Y",$date) ? 'selected="selected"' : '';
 			$output .= "<option value=\"".date("Y",$date)."\" $selected>".date("Y",$date)."</option>";
 		}
 
