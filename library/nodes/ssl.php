@@ -46,8 +46,18 @@ class SSL extends Node {
 	
 	public function ready() {
 		$this->element = false;
+
+		/**
+		 * If were in dev mode disable SSL switch
+		 */
 		$dev = e::$environment->requireVar('Development.Master', 'yes | no');
 		if($dev == 'yes' || $dev === true) return;
+
+		/**
+		 * If our site does not support ssl disable switch
+		 */
+		$nossl = e::$environment->getVar('NoSSL', 'yes | no');
+		if($nossl == 'yes' || $nossl === true) return;
 
 		/**
 		 * Get Options From Tag Name
