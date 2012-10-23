@@ -78,7 +78,7 @@ class SSL extends Node {
 			return;
 
 		if($toggle == 'off') {
-			if($_SERVER['HTTPS'] == "on") {
+			if(e::$url->protocol() == "https") {
 		    	$url = "http://". $domain . $_SERVER['REQUEST_URI'];
 				header("Location: $url");
 		    	exit;
@@ -86,7 +86,7 @@ class SSL extends Node {
 		}
 		
 		else if($toggle == 'on' || is_null($toggle)) {
-			if($_SERVER['HTTPS'] != "on") {
+			if(e::$url->protocol() != "https") {
 		    	$url = "https://". $domain . $_SERVER['REQUEST_URI'];
 				header("Location: $url");
 		    	exit;
