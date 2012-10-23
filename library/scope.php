@@ -6,15 +6,15 @@ use Closure;
 use e;
 
 class Scope {
-	
+
 	public $owner;
-	
+
 	private $source_as = false;
 	private $source_data = false;
 	private $source_pointer = false;
 	private $source_count = false;
 	private $deferred_sources = array();
-	
+
 	public $timers = array();
 
 	public static function hookExists($name) {
@@ -44,16 +44,16 @@ class Scope {
 		foreach($scope->sourceData() as $var => $value)
 			$this->source_data[$var] = $value;
 	}
-	
+
 	public function __construct($owner = false) {
 		$this->timers['scope->map'] = 0;
 		$this->timers['scope->get'] = 0;
-		
+
 		/**
 		 * Set the parent scope
 		 */
 		$this->owner = $owner;
-		
+
 		/**
 		 * Prepare URL Hook
 		 */
@@ -72,9 +72,9 @@ class Scope {
 		 */
 		e::configure('lhtml')->activeAddKey('hook', ':url', array('--reference' => &$url));
 	}
-	
+
 	public function get($var_map, $depth = 0, $ztrace = false, $zsteps = array()) {
-	
+
 		if($var_map === 'true') return true;
 		if($var_map === 'false') return false;
 
@@ -120,10 +120,10 @@ class Scope {
 			if($ztrace)
 				$zsteps[] = array('var' => $var_map, 'deferred' => true);
 		}
-		
+
 		// strip special char for embedded JS vars
 		if(is_string($var_map) AND strpos($var_map, '%') === 0) $var_map = substr($var_map, 1);
-		
+
 		$allmap = is_string($var_map) ? $this->parse($var_map, $depth + 1) : $var_map;
 		$filters = $allmap['filters'];
 		$map = $allmap['vars'];
@@ -147,7 +147,7 @@ class Scope {
 
 			return $source;
 		}
-		
+
 		$flag_first = false;
 
 		/**
@@ -192,7 +192,6 @@ class Scope {
 				;//throw new Exception("Hook `$map[0]` does not exist");
 			else {
 				$hook = self::getHook($map[0]);
-
 				if(is_callable($hook)) {
 
 					if($ztrace)
@@ -210,9 +209,9 @@ class Scope {
 					$flag_first=1;
 				}
 			}
-			
+
 		}
-		
+
 		if(!$flag_first) {
 
 			if($ztrace)
@@ -256,7 +255,7 @@ class Scope {
 
 				$flag_first = 1;
 			}
-			
+
 			/**
 			 * Pass on traversable object (i.e. allow loopable source when not in a loop)
 			 * @author Nate Ferrero
@@ -295,7 +294,7 @@ class Scope {
 				}
 				if(isset($source)) $flag_first = 1;
 			}
-			
+
 			/**
 			 * Array
 			 */
@@ -305,16 +304,16 @@ class Scope {
 					unset($source);
 					$i++;
 				}
-				
+
 				if(isset($source)) $flag_first = 1;
 			}
-			
+
 			/**
 			 * Object
 			 */
 			else if(is_string($map[0]) && isset($this->source_data[$map[0]]) && !($this->source_data[$map[0]] instanceof \Traversable)) {
 				$tmp = $this->source_data[$map[0]];
-				
+
 				if(is_array($source) && $this->source_pointer !== false) {
 					$i=0; foreach($tmp as $source) {
 						if($i === $this->source_pointer) break;
@@ -322,10 +321,10 @@ class Scope {
 						$i++;
 					}
 				} else $source = $tmp;
-				
+
 				if(isset($source)) $flag_first = 1;
 			}
-			
+
 			else if(is_string($map[0]) && !isset($this->source_data[$map[0]])) {
 				if(is_object($this->owner)) {
 					$parent = $this->owner->parent();
@@ -413,7 +412,7 @@ class Scope {
 					else e\Trace_Exception($e);
 				}
 			}
-			
+
 			else if(is_array($source)) {
 				if(!$flag_first && $this->source_pointer !== false && $map[0] == $this->source_as && !$iterated) {
 					$iterated = true;
@@ -443,7 +442,7 @@ class Scope {
 
 		if($ztrace)
 			$zsteps[] = array('source' => $source, 'filters' => $filters);
-		
+
 		/**
 		 * Perform Filters
 		 */
@@ -461,26 +460,25 @@ class Scope {
 					$zsteps[] = array('filter' => $filter['func'], 'arguments' => $filter['args'], 'source' => $source);
 			}
 		}
-		
+
 		$this->timers['scope->get'] += microtime(true) - $tt;
-		
+
 		if($ztrace)
 			dump($zsteps);
 
 		return $source;
 	}
-	
+
 	/*
 	 * Evaluate any condition string and return true or false based off the conditions.
 	 * @author David Boskovic
 	 * Examples: (:member.id > 1 || (:member.id == -5 && :member.status != 4 )) && :member.name|length > 1
 	 */
 	public function evaluate($string) {
-	
 		$string = '('.$string.')';
+		$string = preg_replace("/(?<=\w)((\()([^)]*)(\)))/", "<<$3>>", $string);
 		$match = 1;
 		while($match) {
-			
 			$matches = $this->_get_matches("/\([^\(\)]*\)/", $string);
 			if(!$matches) $match = false;
 			foreach($matches as $match) {
@@ -491,7 +489,7 @@ class Scope {
 					$a = $this->_evaluate_comparison($logical_segs[0]);
 				} else {
 					if(!(count($logical_segs)%2)) throw new Exception($string." can't be evaluated because of a bad logical operator structure. Please review and try again.");
-					
+
 					$a = false;
 					$op = false;
 					$b = false;
@@ -521,86 +519,94 @@ class Scope {
 				$string = str_replace($match, $a, $string);
 			}
 
-		}		
+		}
 
 		return $this->_evaluate_comparison($string);
-		
-		//	evaluate open conditions
-		
-		
-	}
-	
-	private function _evaluate_comparison($comp) {
-		
-				$ops = array('==', '!=', '===', '!==','<>','<','>','<=','>=');
-				$p = false;
-				foreach($ops as $i) {
-					if(strpos($comp, " $i ") !== false) $p = true;
-				}
-				if($p == false) {
-					$a = $comp;
-					$op = '==';
-					$b = 'true';
-				}
-				else
-					list($a, $op, $b) = $this->_divide_string($comp, $ops);
 
-				$eval_a = $this->get($a);
-				$eval_b = $this->get($b);
-				
-				switch($op) {
-					case '==':
-						$result = $eval_a == $eval_b;
-					break;
-					case '!=':
-					case '<>':
-						$result = $eval_a != $eval_b;
-					break;
-					case '===':
-						$result = $eval_a === $eval_b;
-					break;
-					case '!==':
-						$result = $eval_a !== $eval_b;
-					break;
-					case '<':
-						$result = $eval_a < $eval_b;
-					break;
-					case '>':
-						$result = $eval_a > $eval_b;
-					break;
-					case '<=':
-						$result = $eval_a <= $eval_b;
-					break;
-					case '>=':
-						$result = $eval_a >= $eval_b;
-					break;
-				}
-				return $result;
+		//	evaluate open conditions
+
+
 	}
-	
+
+	private function _evaluate_comparison($comp) {
+		$comp = preg_replace("/((<<)(.*)(>>))/", "($3)", $comp);
+		$ops = array('==', '!=', '===', '!==','<>','<','>','<=','>=');
+		$p = false;
+		foreach($ops as $i) {
+			if(strpos($comp, " $i ") !== false) $p = true;
+		}
+		if($p == false) {
+			if(strpos($comp, '!') === 0) {
+				$a = substr($comp, 1);
+				$op = 'EMPTY';
+				$b = 'true';
+			} else {
+				$a = $comp;
+				$op = 'EMPTY';
+				$b = 'false';
+			}
+		}
+		else
+			list($a, $op, $b) = $this->_divide_string($comp, $ops);
+		$eval_a = $this->get($a);
+		$eval_b = $this->get($b);
+
+		switch($op) {
+			case '==':
+				$result = $eval_a == $eval_b;
+			break;
+			case '!=':
+			case '<>':
+				$result = $eval_a != $eval_b;
+			break;
+			case '===':
+				$result = $eval_a === $eval_b;
+			break;
+			case '!==':
+				$result = $eval_a !== $eval_b;
+			break;
+			case '<':
+				$result = $eval_a < $eval_b;
+			break;
+			case '>':
+				$result = $eval_a > $eval_b;
+			break;
+			case '<=':
+				$result = $eval_a <= $eval_b;
+			break;
+			case '>=':
+				$result = $eval_a >= $eval_b;
+			break;
+			case 'EMPTY':
+				$result = empty($eval_a) == $eval_b;
+			break;
+		}
+		return $result;
+	}
+
 	private function _divide_string($string, $array) {
 		$string = " $string ";
-	
+
 		/**
 		 * Determine where the operators are
 		 */
 		$index = array();
 		foreach($array as $split) {
 			$split = ' '.$split.' ';
-		
+
 			$pos = 0;
 			while(($pos = strpos($string, $split, $pos)) !== FALSE) {
 				$index[$pos] = $split;
 				$pos += strlen($split);
 			}
-			
+
 		}
-		
+
 		/**
 		 * Sort the array by index (character positions)
 		 */
 		ksort($index);
-		
+
 		/**
 		 * Prepare the output of the divided string
 		 */
@@ -611,22 +617,22 @@ class Scope {
 			$output[] = $delim;
 			$lp = $pos + strlen($delim);
 		}
-		
+
 		/**
 		 * Append the last part of the condition
 		 */
 		if(substr($string, $lp)) $output[] = substr($string, $lp);
-		
+
 		/**
 		 * Trim the array strings
 		 */
 		foreach($output as &$trim)
 			$trim = trim($trim);
-				
+
 		return $output;
-	
+
 	}
-	
+
 	private function _get_matches($regex, $string) {
 		preg_match_all(
 				$regex, //regex
@@ -634,23 +640,23 @@ class Scope {
 				$matches_vars, // variable to export results to
 				PREG_SET_ORDER // settings
 			);
-			
+
 			foreach((array)$matches_vars as $var) {
 				$vars[] = $var[0];
 			}
 			return $vars;
 	}
-	
+
 	public function parse($var, $depth = 0) {
 		$tt = microtime(true);
 		$original = $var;
-		
+
 		$extract_vars = $this->extract_vars($var);
 		if(!empty($extract_vars)) foreach($extract_vars as $rv) {
 			$val = (string) $this->get($rv, $depth);
 			$var = str_replace('{'.$rv.'}', $val, $var);
 		}
-		
+
 		$subvars = false;
 		$extract_subvars = $this->extract_subvars($var);
 		if(!empty($extract_subvars)) {
@@ -660,7 +666,7 @@ class Scope {
 				$var = str_replace('['.$rv.']', $val, $var);
 			}
 		}
-		
+
 		/**
 		 * Re-extract variables that have been populated with subvars
 		 * Allows for "variable variables" like : {[varname].something}
@@ -680,9 +686,9 @@ class Scope {
 		if(strpos($var, ' ? ') !== false) {
 			list($cond, $result) = explode(' ? ', $var);
 			$else = false;
-			
+
 			if(strpos($result, ' : ') !== false) list($result, $else) = explode(' : ', $result);
-			
+
 			if(strpos($cond, ' + ') !== false) {
 				list($cond1, $cond2) = explode(' + ', $cond);
 				$var = $cond1 + $cond2;
@@ -703,7 +709,7 @@ class Scope {
 				list($cond, $compare) = explode(' == ', $cond);
 				$val = $this->get($cond, $depth);
 				$cval = $this->get($compare, $depth);
-				
+
 				/**
 				 * Make sure the values are not empty
 				 * @author Kelly Becker
@@ -715,7 +721,7 @@ class Scope {
 				list($cond, $compare) = explode(' != ', $cond);
 				$val = $this->get($cond, $depth);
 				$cval = $this->get($cond, $depth);
-				
+
 				if($val != $cval) $var = $result;
 				else $var = $else;
 			}
@@ -744,48 +750,48 @@ class Scope {
 				else $var = $else;
 			}
 		}
-		
+
 		$ef = $this->extract_funcs($var);
 		if(is_array($ef)) foreach($ef as $k=>$f) {
 			$ef[$k]['key'] = '%F'.$k;
 			$var = str_replace($f['string'], '%F'.$k, $var);
 		}
-		
+
 		if(strpos($var, '|') !== false) {
 			$a = explode('|', $var);
 			$var = (strlen($a[0]) > 0 ? $a[0] :false);
 			$filters = array_slice($a, 1);
 		}
 		else $filters = array();
-		
+
 		$vars = explode('.', $var);
 		foreach($vars as &$v) {
 			if(substr($v, 0, 2) == '%F') $v = $ef[substr($v, 2)];
 		}
-		
+
 		if(is_array($filters)) foreach($filters as &$filter) {
 			if(substr($filter, 0, 2) == '%F') $filter = $ef[substr($filter, 2)];
 		}
-		
+
 		$this->timers['scope->map'] += microtime(true) - $tt;
-		
+
 		return array('vars' => $vars, 'filters' => $filters);
 	}
-	
+
 	/**
 	 * Get parsed variable
 	 */
 	public function __get($v) {
 		return $this->get($v);
 	}
-	
+
 	/**
 	 * Load a literal variable into the scope
 	 */
 	public function __set($var, $value) {
 		$this->source_data[$var] = $value;
 	}
-	
+
 	/**
 	 * Load source into the scope
 	 */
@@ -795,18 +801,18 @@ class Scope {
 		 */
 		if(!$as) $as = 'i';
 		$this->source_as = $as;
-				
+
 		/**
 		 * Load the source into the scope
 		 */
 		$this->source_data[$this->source_as] = $source;
-		
+
 		/**
 		 * If string or non traversable object
 		 */
 		if(!(is_array($source) || $source instanceof \Traversable))
 			$this->source_count = 1;
-		
+
 		/**
 		 * Else count the iterations
 		 */
@@ -815,32 +821,32 @@ class Scope {
 			$this->source_count = count($source);
 		}
 
-		
+
 		/**
 		 * Reset the pointer
 		 */
 		$this->source_pointer = false;
 	}
-	
+
 	/**
 	 * Reset Iterations
 	 */
 	public function reset() {
 		$this->source_pointer = 0;
-		
+
 		return $this;
 	}
-	
+
 	/**
 	 * Next Source
 	 */
 	public function next() {
 		if($this->source_pointer < $this->source_count)
 			$this->source_pointer++;
-		
+
 		return $this;
 	}
-	
+
 	/**
 	 * Is still in a safe zone
 	 */
@@ -850,29 +856,29 @@ class Scope {
 		else
 			return false;
 	}
-	
+
 	/**
 	 * Back One Source
 	 */
 	public function back() {
 		if($this->source_pointer !== 0)
 			$this->source_pointer--;
-		
+
 		return $this;
 	}
-	
+
 	/**
 	 * Count the Sources
 	 */
 	public function count() {
 		return $this->source_count;
 	}
-	
+
 	/**
 	 * Extract all variables Below Here
 	 */
 	private function extract_vars($content) {
-		
+
 		if(strpos($content, '{') === false) return array();
 		// parse out the variables
 		preg_match_all(
@@ -881,17 +887,17 @@ class Scope {
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
 		);
-		
+
 		foreach((array)$matches_vars as $var) {
 			$vars[] = $var[1];
 		}
-		
+
 		return $vars;
-		
+
 	}
-	
+
 	private function extract_subvars($content) {
-		
+
 		if(strpos($content, '[') === false) return array();
 		// parse out the variables
 		preg_match_all(
@@ -900,15 +906,15 @@ class Scope {
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
 		);
-		
+
 		foreach((array)$matches_vars as $var) {
 			$vars[] = $var[1];
 		}
-		
+
 		return $vars;
-		
+
 	}
-	
+
 	private function extract_funcs($content) {
 		if(strpos($content, '(') === false) return array();
 		// parse out the variables
@@ -918,16 +924,16 @@ class Scope {
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
 		);
-		
+
 		foreach((array)$matches_vars as $var) {
-			$vars[] = array('func' => $var[1], 'string' => $var[0], 
+			$vars[] = array('func' => $var[1], 'string' => $var[0],
 				'args' => ($var[2] == '' ? array() : explode(',', $var[2]))
 			);
 		}
-		
+
 		return $vars;
 	}
-	
+
 	/**
 	 * Print Info
 	 * @author Nate Ferrero
