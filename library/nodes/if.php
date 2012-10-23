@@ -294,6 +294,15 @@ class _If extends Node {
 			
 			if($v == 'IE' && isset($_SERVER['HTTP_USER_AGENT']) && strpos($_SERVER['HTTP_USER_AGENT'], 'MSIE') !== false) $retval = true;
 			else $retval = false;
+
+			if($v == 'Smartphone' && isset($_SERVER['HTTP_USER_AGENT'])) {
+				$iPod = stripos($_SERVER['HTTP_USER_AGENT'],"iPod") !== FALSE;
+				$iPhone = stripos($_SERVER['HTTP_USER_AGENT'],"iPhone") !== FALSE;
+				$iPad = stripos($_SERVER['HTTP_USER_AGENT'],"iPad") !== FALSE;
+				$Android= stripos($_SERVER['HTTP_USER_AGENT'],"Android") !== FALSE;
+				if($iPod || $iPhone || $iPad || $Android) $retval = true;
+				else $retval = false;
+			}
 			
 		}
 		

@@ -649,7 +649,7 @@ class Node {
 		/**
 		 * Return the rendered page
 		 */
-		return $output;
+		return is_null($this->_) ? $this->remove_antiVar($output) : $output;
 	}
 	
 	public function _data() {
@@ -853,12 +853,12 @@ class Node {
 	/**
 	 * Extract Variables
 	 */
-	protected function extract_vars($content,$delim = array('{', '}')) {
+	protected function extract_vars(&$content, $delim = array('{', '}')) {
 		
 		if(strpos($content, $delim[0]) === false) return array();
 		// parse out the variables
 		preg_match_all(
-			"/$delim[0]([\w:@|.\,\(\)\/\-\% \[\]\?'=]+?)$delim[1]/", //regex
+			"/(?<!%)$delim[0]([\w:@|.\,\(\)\/\-\% \[\]\?'=]+?)$delim[1]/", //regex
 			$content, // source
 			$matches_vars, // variable to export results to
 			PREG_SET_ORDER // settings
@@ -893,6 +893,10 @@ class Node {
 		
 		return $vars;
 		
+	}
+
+	protected function remove_antiVar($content) {
+		return preg_replace("/%({[\w:@|.\,\(\)\/\-\% \[\]\?'=]+?})/", "$1", $content);
 	}
 	
 	protected function extract_funcs($content) {
