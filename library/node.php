@@ -64,6 +64,7 @@ class Node {
 		return $this->fake_element;
 	}
 
+
 	public $_ready = false;
 	
 	/**
@@ -71,7 +72,6 @@ class Node {
 	 * @author Nate Ferrero
 	 */
 	public final function _ready($doSelf = true) {
-
 		if($this->canPreload() && !$this->_ready)
 			$this->_init_scope();
 
@@ -455,6 +455,8 @@ class Node {
 			case 'scope':
 				dump($this->_data());
 			break;
+			case 'loop':
+			break;
 			case 'node':
 			default:
 				dump($this);
@@ -482,9 +484,10 @@ class Node {
 			'is_loop' => $this->is_loop,
 			':load' => $this->attributes[':load'],
 			'data' => $this->_data(),
+			'once' => $once,
 			'iteratable' => $this->_data()->iteratable()
 		));
-		
+
 		/**
 		 * Start build loop
 		 */
@@ -595,8 +598,12 @@ class Node {
 						
 					}
 					
-					else if($displayContent)
-						$output .= $this->element == 'script' && isset($this->attributes[':delimiter']) ? $this->_string_parse($child, false, true) : $this->_string_parse($child);
+					else if($displayContent) {
+						if(isset($this->attributes[':ignore']))
+							$output .= $child;
+						else
+							$output .= $this->element == 'script' && isset($this->attributes[':delimiter']) ? $this->_string_parse($child, false, true) : $this->_string_parse($child);
+					}
 
 				}
 			}
