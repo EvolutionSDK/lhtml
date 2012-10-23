@@ -11,7 +11,7 @@ use e;
 class Bundle {
 
 	public static $url_vars = array();
-	
+
 	public function __getBundle() {
 		return new Instance;
 	}
@@ -19,9 +19,9 @@ class Bundle {
 	public function __callBundle() {
 		return new Instance;
 	}
-	
+
 	public function __initBundle() {
-		
+
 		/**
 		 * Add basic hooks
 		 */
@@ -62,11 +62,11 @@ class Bundle {
 		} catch(Exception $e) {}
 		return $all;
 	}
-	
+
 	public function _on_portal_route($path, $dir) {
 		$this->route($path, array($dir));
 	}
-	
+
 	//public function _on_router_route($path) {
 	//	$this->route($path, array(e\site));
 	//}
@@ -74,7 +74,7 @@ class Bundle {
 	public function _on_portal_exception($path, $dir, $exception) {
 		$this->exception($path, array($dir), $exception);
 	}
-	
+
 	public function _on_router_exception($path, $exception) {
 		$this->exception($path, array(e\site), $exception);
 	}
@@ -83,32 +83,32 @@ class Bundle {
 		$search = 'special-' . ($exception instanceof NotFoundException ? 'notfound' : 'exception');
 		$this->route(array($search), $dirs);
 	}
-	
+
 	public function route($path, $dirs = null) {
-		
+
 		// If dirs are not specified, use defaults
 		if(is_null($dirs))
 			$dirs = e::configure('lhtml')->locations;
-		
+
 		// Make sure path contains valid controller name
 		if(!isset($path[0]) || $path[0] == '')
 			$path = array('index');
-		
+
 		// Get the lhtml name
 		$name = strtolower(implode('/', $path));
-		
+
 		e\Trace(__CLASS__, "Looking for $name.lhtml");
-		
+
 		// Check all dirs for a matching lhtml
 		foreach($dirs as $dir) {
 			// Look in lhtml folder
 			if(basename($dir) !== 'lhtml')
 				$dir .= '/lhtml';
-			
+
 			// Skip if missing
 			if(!is_dir($dir))
 				continue;
-			
+
 			$matched = false;	$vars = array();	$nodir = false; $badmatch = false;
 			$p = 1;
 			foreach($path as $key => $segment) {
@@ -126,7 +126,7 @@ class Bundle {
 					break;
 				}
 			}
-			
+
 			if($matched == 'dir' && !$badmatch && is_file("$dir/index.lhtml")) {
 				$file = "$dir/index.lhtml";
 				$matched = 'index';
@@ -134,7 +134,7 @@ class Bundle {
 
 			# no match at all, just continue
 			if($matched == false) continue;
-			
+
 			# set the url vars to use
 			self::$url_vars = $vars;
 
@@ -149,7 +149,7 @@ class Bundle {
 
 			// Show debug time if set
 			if(isset($_GET['--lhtml-time'])) {
-				
+
 
 				// $file $time
 				eval(d);
@@ -184,7 +184,7 @@ class Bundle {
 		foreach(glob("$dir/*") as $file)
 			if(!unlink($file)) return "Error: Unable to clear LHTML cache";
 		return "LHTML cache cleared";
-	} 
+	}
 }
 
 class Instance {
@@ -206,7 +206,7 @@ class Instance {
 		}
 		return null;
 	}
-	
+
 	private $file = null;
 	private $string = null;
 	private $description = '{unknown}';
@@ -221,7 +221,7 @@ class Instance {
 			unset($this->stack);
 		return $this;
 	}
-	
+
 	public function string($string, $description = '{string}', $timestamp = null) {
 		$this->string = $string;
 		$this->file = null;
@@ -258,7 +258,7 @@ class Instance {
 	public function setContentType($type) {
 		self::$contentType = $type;
 	}
-	
+
 	/**
 	 * Parse the loaded file
 	 * @author Nate Ferrero
@@ -272,7 +272,7 @@ class Instance {
 
 		if(!($parent instanceof Node))
 			throw new Exception("Parent is not a Node");
-		
+
 		if(!is_null($this->file)) {
 
 			/**
@@ -310,11 +310,27 @@ class Instance {
 		}
 		else if(!is_null($this->string)) {
 
+			$hash = md5($this->string);
+
 			/**
-			 * Todo: add caching for strings
-			 * @author Nate Ferrero
+			 * Load strings from cache. Increases speed greatly when parsing database stored LHTML.
+			 * @author David Boskovic
 			 */
-			$this->stack = Parser::parseString($this->string, $this->description, $parent);
+			if(!isset($_GET['--lhtml-no-cache']) && e::$cache->check('lhtml','string-'.$hash)) {
+				$uncache = e::$cache->get('lhtml', 'string-'.$hash);
+				if(!($uncache instanceof Node))
+					throw new Exception("Cached LHTML stack is not a Node");
+				$this->stack = $uncache;
+			}
+			else {
+				$this->stack = Parser::parseString($this->string, $this->description, $parent);
+
+				/**
+				 * Store in cache
+				 * @author David Boskovic
+				 */
+				e::$cache->store('lhtml', 'string-'.$hash, $this->stack);
+			}
 			unset($this->string);
 		}
 
@@ -362,18 +378,18 @@ class UseAlternateStack extends Exception {
  * Allow access to the e stack in LHTML
  */
 class e_handle {
-	
+
 	public function __call($method, $args) {
 		$method = strtolower($method);
 		if(!empty($args)) {
 			$method = "e::$method";
 			return call_user_func_array($method, $args);
 		}
-		
+
 		if(!isset(e::$$method))
 			throw new Exception("Bundle `$method` is not installed");
 
 		return e::$$method;
 	}
-	
+
 }
